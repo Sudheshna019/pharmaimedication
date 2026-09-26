@@ -1,0 +1,50 @@
+{
+  "adr_kidney": {
+    "test_pr_auc": 0.06313174349956144,
+    "test_roc_auc": 0.5682266480020361,
+    "test_f1": 0.08992650237786425,
+    "optimal_val_threshold": 0.4569314122200012
+  },
+  "adr_bleeding": {
+    "test_pr_auc": 0.05519095033387436,
+    "test_roc_auc": 0.6013156024311515,
+    "test_f1": 0.10662080825451418,
+    "optimal_val_threshold": 0.5270559191703796
+  },
+  "adr_hepatotoxicity": {
+    "test_pr_auc": 0.08327367322839124,
+    "test_roc_auc": 0.5703986097827112,
+    "test_f1": 0.06167400881057269,
+    "optimal_val_threshold": 0.7332156300544739
+  },
+  "adr_arrhythmia": {
+    "test_pr_auc": 0.03642002315393301,
+    "test_roc_auc": 0.565637616788192,
+    "test_f1": 0.06736842105263158,
+    "optimal_val_threshold": 0.6103076934814453
+  },
+  "adr_hyperkalemia": {
+    "test_pr_auc": 0.02619352453928268,
+    "test_roc_auc": 0.6273661480029404,
+    "test_f1": 0.012154696132596685,
+    "optimal_val_threshold": 0.18305712938308716
+  },
+  "adr_hypotension": {
+    "test_pr_auc": 0.0253873420907894,
+    "test_roc_auc": 0.546830764130615,
+    "test_f1": 0.05,
+    "optimal_val_threshold": 0.6290691494941711
+  },
+  "adr_gastrointestinal": {
+    "test_pr_auc": 0.24985760921960776,
+    "test_roc_auc": 0.6313627976294212,
+    "test_f1": 0.2689295039164491,
+    "optimal_val_threshold": 0.48245930671691895
+  },
+  "adr_neurological": {
+    "test_pr_auc": 0.1490225669541516,
+    "test_roc_auc": 0.5976046014563854,
+    "test_f1": 0.217787913340935,
+    "optimal_val_threshold": 0.5133053660392761
+  }
+}

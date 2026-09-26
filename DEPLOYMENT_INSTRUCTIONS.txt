@@ -1,0 +1,92 @@
+====================================================================
+               PHARMAI MEDICATION - DEPLOYMENT GUIDE
+====================================================================
+
+Q: Do I need Vercel?
+A: NO! You ONLY need Render. Render will host both your frontend 
+   website and your backend server together in one place.
+
+--------------------------------------------------------------------
+STEP 1: HOW TO OPEN TERMINAL ON YOUR COMPUTER (WINDOWS)
+--------------------------------------------------------------------
+
+Option A (From VS Code / Antigravity):
+  - Press `Ctrl` + `~` (the tilde key next to 1) on your keyboard.
+  - OR click 'Terminal' in the top menu bar -> 'New Terminal'.
+
+Option B (From Windows Search):
+  - Press the Windows Key.
+  - Type "cmd" or "PowerShell".
+  - Open "Command Prompt" or "PowerShell".
+  - Type: cd C:\Users\91970\Downloads\pharmaimedication
+  - Press Enter.
+
+--------------------------------------------------------------------
+STEP 2: SAVE AND PUSH YOUR CODE TO GITHUB
+--------------------------------------------------------------------
+
+Run these commands one by one in your terminal:
+
+1. Initialize git (if not done yet):
+   git init
+
+2. Add all your project files:
+   git add .
+
+3. Commit your files:
+   git commit -m "Initial commit for deployment"
+
+4. Go to GitHub in your browser (https://github.com/new):
+   - Sign in or create an account.
+   - Click the green "New" button to create a new repository.
+   - Name it: pharmaimedication
+   - Click "Create repository".
+
+5. Copy the commands shown on GitHub to link and push your code:
+   git remote add origin https://github.com/YOUR_GITHUB_USERNAME/pharmaimedication.git
+   git branch -M main
+   git push -u origin main
+
+--------------------------------------------------------------------
+STEP 3: DEPLOY ON RENDER.COM (FREE & EASY)
+--------------------------------------------------------------------
+
+1. Open https://dashboard.render.com in your web browser.
+2. Sign up or Log in (you can sign in with your GitHub account).
+3. Click the blue "New +" button at the top right and select "Web Service".
+4. Select "Build and deploy from a Git repository".
+5. Connect your GitHub account and select your repository ("pharmaimedication").
+6. Fill in these exact settings:
+
+   - Name:            pharmaimedication
+   - Region:          (Choose any, e.g., Oregon, Frankfurt, Singapore)
+   - Branch:          main
+   - Runtime:         Node
+   - Build Command:   npm install && npm run build
+   - Start Command:   npm start
+
+--------------------------------------------------------------------
+STEP 4: ADD YOUR GEMINI API KEY IN RENDER
+--------------------------------------------------------------------
+
+1. On the same Render setup page, scroll down to "Environment Variables".
+2. Click "Add Environment Variable".
+3. Enter the following:
+   - Key:   GEMINI_API_KEY
+   - Value: (Paste your Gemini API key from Google AI Studio)
+
+4. Add one more Environment Variable:
+   - Key:   NODE_ENV
+   - Value: production
+
+--------------------------------------------------------------------
+STEP 5: LAUNCH YOUR WEBSITE!
+--------------------------------------------------------------------
+
+1. Click the blue "Create Web Service" button at the bottom.
+2. Render will build and deploy your project automatically (takes 2-3 minutes).
+3. Once finished, Render will display your live URL at the top left 
+   (e.g., https://pharmaimedication.onrender.com).
+
+Congratulations! Your app is now live on the internet!
+====================================================================

@@ -1,0 +1,24 @@
+DrugBank_Pair_ID, Drug1_Accession,Drug1_Generic_Name,Drug2_Accession,Drug2_Generic_Name,DDI_Class_ID,Clinical_Interaction_Mechanism,Severity_Tier
+PAIR-001,DB00387,Pravastatin,DB01403,Telmisartan,Class 12,Hepatic metabolism & transporter clearance competition,Medium Risk
+PAIR-002,DB00956,Oxcarbazepine,DB09119,Glibenclamide,Class 8,CYP3A4 enzyme induction reducing antidiabetic efficacy,High Risk
+PAIR-003,DB00196,Fluconazole,DB06702,Bosutinib,Class 6,Strong CYP3A4 inhibition increasing kinase exposure,Critical Risk
+PAIR-004,DB00041,Sargramostim,DB00177,Filgrastim,Class 28,Additive myelosuppressive and cytokine response,Medium Risk
+PAIR-005,DB00343,Diltiazem,DB04908,Aliskiren,Class 31,Dual AV-node slowing and hypotensive hemodynamic synergy,High Risk
+PAIR-006,DB00321,Amitriptyline,DB01067,Glipizide,Class 9,Renal excretion interference and hypoglycemia prolongation,High Risk
+PAIR-007,DB00337,Pimecrolimus,DB06772,Cabozantinib,Class 25,Systemic immunosuppressive & kinase clearance inhibition,High Risk
+PAIR-008,DB00358,Mirtazapine,DB00648,Ketoconazole,Class 6,CYP3A4 inhibition elevating antidepressant exposure,High Risk
+PAIR-009,DB00682,Warfarin,DB00713,Fluphenazine,Class 27,Prothrombin time prolongation and systemic bleeding hazard,Critical Risk
+PAIR-010,DB00472,Fluoxetine,DB00477,Chlorpromazine,Class 32,QTc interval prolongation and central serotonin buildup,Critical Risk
+PAIR-011,DB00502,Haloperidol,DB01009,Benztropine,Class 0,Central anticholinergic & extrapyramidal symptom blockade,Medium Risk
+PAIR-012,DB00919,Tolbutamide,DB00991,Oxyphenbutazone,Class 8,Plasma protein displacement increasing free sulfonylurea,Critical Risk
+PAIR-013,DB00436,Glimepiride,DB01232,Saquinavir,Class 5,Protease inhibitor competition for CYP2C9 metabolism,High Risk
+PAIR-014,DB00325,Hydrocortisone,DB00806,Pentoxifylline,Class 26,Additive gastrointestinal ulceration risk,Medium Risk
+PAIR-015,DB00186,Dasatinib,DB00972,Lithium Carbonate,Class 21,Renal clearance impairment risking lithium toxicity,Critical Risk
+PAIR-016,DB01203,Fludarabine,DB01235,Levofloxacin,Class 25,Renal tubular clearance competition,Medium Risk
+PAIR-017,DB00328,Indomethacin,DB00700,Enalapril,Class 35,NSAID blockade of ACE inhibitor renal vasodilatory effect,High Risk
+PAIR-018,DB06335,Plerixafor,DB09564,Netarsudil,Class 25,Cellular mobilization transport clearance competition,Low Risk
+PAIR-019,DB00758,Clomipramine,DB01054,Pilocarpine,Class 0,Antagonistic muscarinic cholinergic receptor response,High Risk
+PAIR-020,DB00684,Rifampicin,DB00766,Clavulanic Acid,Class 7,Potent CYP3A4/2C9 induction reducing antibiotic stability,High Risk
+PAIR-021,DB00091,Cyclosporine,DB01353,Tacrolimus,Class 21,Additive calcineurin nephrotoxicity and acute renal impairment,Critical Risk
+PAIR-022,DB00477,Chlorpromazine,DB01151,Citalopram,Class 32,Synergistic QTc interval prolongation & arrhythmia hazard,Critical Risk
+PAIR-023,DB00422,Methylprednisolone,DB00682,Warfarin,Class 27,Corticosteroid ulceration + Anticoagulant hemorrhage hazard,Critical Risk

@@ -1,0 +1,10 @@
+{
+  "adr_kidney": 0.4569314122200012,
+  "adr_bleeding": 0.5270559191703796,
+  "adr_hepatotoxicity": 0.7332156300544739,
+  "adr_arrhythmia": 0.6103076934814453,
+  "adr_hyperkalemia": 0.18305712938308716,
+  "adr_hypotension": 0.6290691494941711,
+  "adr_gastrointestinal": 0.48245930671691895,
+  "adr_neurological": 0.5133053660392761
+}

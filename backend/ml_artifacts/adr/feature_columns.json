@@ -1,0 +1,19 @@
+[
+  "patient_age",
+  "biological_sex",
+  "drug_count",
+  "drug_pair_count",
+  "geriatric_flag",
+  "bleeding_synergy",
+  "raas_inhibition",
+  "qt_prolongation",
+  "hyperkalemia_risk",
+  "nephrotoxicity",
+  "cyp450_interaction",
+  "bleeding_med_count",
+  "raas_med_count",
+  "qt_med_count",
+  "hyperk_med_count",
+  "nephro_med_count",
+  "cyp_med_count"
+]
