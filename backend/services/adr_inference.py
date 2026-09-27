@@ -28,6 +28,7 @@ class ADRInferenceEngine:
         for t in TARGETS:
             b = xgb.Booster()
             b.load_model(str(ADR_DIR / f"adr_xgb_{t}.json"))
+            b.set_param({"nthread": 1})
             self.boosters[t] = b
         self.norm = get_normalizer()
         LOGGER.info("ADR engine loaded: %d XGBoost models, %d features", len(self.boosters), len(self.spec["columns"]))

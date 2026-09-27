@@ -3,9 +3,16 @@
 Run from the project root:
     uvicorn backend.main:app --port 8000
 """
-import logging
+import os
 
-from fastapi import FastAPI
+# Free hosting tiers give a fraction of one CPU; many BLAS / OpenMP threads then fight each
+# other and make every prediction ~100x slower. Use one thread (must be set before numpy loads).
+for _var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
+    os.environ.setdefault(_var, "1")
+
+import logging  # noqa: E402
+
+from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.routers import analysis
