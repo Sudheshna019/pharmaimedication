@@ -15,7 +15,9 @@ import { UserProfileModal } from './components/UserProfileModal';
 import { auth, fetchUserAnalysesFromFirestore, syncAnalysisToFirestore, deleteAnalysisFromFirestore } from './firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 
-import { INITIAL_CLINICIAN, SAMPLE_ANALYSES } from './data/mockData';
+import { INITIAL_CLINICIAN, SAMPLE_ANALYSES, DEMO_REQUEST } from './data/mockData';
+import { apiService } from './api/client';
+import { enrichAnalysisWithDetails } from './utils/pharmacology';
 import { AnalysisResult, ClinicianUser } from './types';
 import { CheckCircle2, ShieldAlert } from 'lucide-react';
 
@@ -298,10 +300,6 @@ export default function App() {
       return;
     }
     
-    // Ensure patient name matches logged-in user if patient persona
-    if (clinician.accountType === 'patient' && clinician.name) {
-      result.patientName = clinician.name;
-    }
 
     setHistory((prev) => {
       const filtered = prev.filter(item => item.id !== result.id);
@@ -319,16 +317,32 @@ export default function App() {
     showToast(`Analysis completed for ${result.patientName}. Risk level: ${result.overallRiskLevel}`);
   };
 
-  const handleRunDemo = () => {
+  const handleRunDemo = async () => {
     if (!clinician.authenticated) {
       setIsAuthOpen(true);
       showToast('Authentication required. Please sign in or create an account to view prescription predictions.');
       return;
     }
-    const demoResult = SAMPLE_ANALYSES[0];
-    setActiveResult(demoResult);
+    const stored = SAMPLE_ANALYSES[0];
+    try {
+      // run the live ML pipeline on the demo prescription
+      const res = await apiService.predictInteraction(DEMO_REQUEST.patientData as any, DEMO_REQUEST.medications);
+      const live = enrichAnalysisWithDetails({
+        ...res.data,
+        timestamp: new Date().toLocaleString(),
+        patientId: stored.patientId,
+        patientName: stored.patientName,
+        patientAge: stored.patientAge,
+        patientGender: stored.patientGender,
+        status: 'Completed'
+      });
+      setActiveResult(live);
+      showToast(`Demo prescription analysed live by the ML pipeline - risk: ${live.overallRiskLevel}`);
+    } catch {
+      setActiveResult(stored);
+      showToast('ML service unreachable - showing the stored output of the pipeline for the demo prescription.');
+    }
     handleTabChange('results');
-    showToast(`Loaded Polypharmacy Demo Prescription (${demoResult.patientName})`);
   };
 
   const handleSelectHistoryResult = (result: AnalysisResult) => {

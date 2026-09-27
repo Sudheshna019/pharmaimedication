@@ -26,7 +26,9 @@ import {
   UserCheck,
   Info
 } from 'lucide-react';
-import { COMMON_MEDICATIONS } from '../data/mockData';
+import { knownMedicineNames } from '../utils/prescriptionParser';
+
+const COMMON_MEDICATIONS = knownMedicineNames();
 import { AnalysisResult, MedicineItem, SeverityLevel, ClinicianUser } from '../types';
 import { enrichAnalysisWithDetails } from '../utils/pharmacology';
 

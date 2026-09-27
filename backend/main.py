@@ -1,70 +1,55 @@
-import uvicorn
+"""PharmAI ML service (FastAPI).
+
+Run from the project root:
+    uvicorn backend.main:app --port 8000
+"""
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.config import settings
-from backend.routers import auth, ocr, analysis, knowledge_base, reports
+
+from backend.routers import analysis
+from backend.services.adr_inference import get_adr_engine
+from backend.services.ddi_inference import get_ddi_engine
+from backend.services.drug_normalizer import get_normalizer
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    description="Production REST API server powered by FastAPI, Scikit-learn, XGBoost, SHAP, AWS Textract, and Firebase."
+    title="PharmAI ML Service",
+    version="3.0.0",
+    description="Drug-drug interaction and adverse drug reaction prediction "
+                "(PyTorch-trained MLPs on Morgan fingerprints, XGBoost on FAERS, TreeSHAP).",
 )
-
-# Robust CORS Middleware supporting local dev origins, credentials, and preflights
-allowed_origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000"
-]
-for extra_origin in getattr(settings, 'ALLOWED_ORIGINS', []):
-    if extra_origin not in allowed_origins:
-        allowed_origins.append(extra_origin)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_origin_regex=r"https?://.*",
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
-    max_age=600
 )
 
-from backend.services.textract_ocr import textract_service
-from backend.services.adr_inference import load_hybrid_system
+app.include_router(analysis.router, prefix="/api/v1")
+
 
 @app.on_event("startup")
-def prewarm_ml_models():
-    """Pre-load ML models & EasyOCR weights into RAM at server startup to eliminate HTTP request timeouts."""
-    try:
-        load_hybrid_system()
-        textract_service._init_reader()
-    except Exception as e:
-        print(f"Model pre-warm notice: {e}")
+def load_models():
+    """Load all models once at startup so the first request is fast."""
+    get_normalizer()
+    get_ddi_engine()
+    get_adr_engine()
 
-# Include API Routers
-app.include_router(auth.router, prefix=settings.API_V1_STR)
-app.include_router(ocr.router, prefix=settings.API_V1_STR)
-app.include_router(analysis.router, prefix=settings.API_V1_STR)
-app.include_router(knowledge_base.router, prefix=settings.API_V1_STR)
-app.include_router(reports.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
-def root_status():
-    return {
-        "status": "online",
-        "service": settings.PROJECT_NAME,
-        "version": settings.VERSION,
-        "documentation": "/docs"
-    }
+def root():
+    return {"service": "PharmAI ML Service", "status": "online", "docs": "/docs"}
+
 
 @app.get("/health")
-def health_check():
-    return {"status": "healthy", "service": "FastAPI Backend Engine"}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.main("backend.main:app", host="127.0.0.1", port=8000, reload=True)
+def health():
+    return {
+        "status": "healthy",
+        "drugs_in_vocabulary": len(get_normalizer().drugs),
+        "ddi_models": ["interaction detector (MLP)", "interaction type classifier (MLP, 86 classes)"],
+        "adr_models": len(get_adr_engine().boosters),
+    }

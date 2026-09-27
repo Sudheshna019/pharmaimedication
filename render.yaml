@@ -1,0 +1,27 @@
+# Render.com Blueprint - two FREE web services (New + > Blueprint > select this repo)
+services:
+  # 1. Python ML service (DDI + ADR models)
+  - type: web
+    name: pharmai-ml
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+
+  # 2. Node web server (React frontend + Tesseract OCR), forwards analysis requests to pharmai-ml
+  - type: web
+    name: pharmai-web
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ML_API_URL
+        # public URL of the pharmai-ml service (shown on its Render dashboard page)
+        value: https://pharmai-ml.onrender.com

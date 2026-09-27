@@ -1,0 +1,432 @@
+{
+ "0": {
+  "description": "#Drug1 can cause a decrease in the absorption of #Drug2 resulting in a reduced serum concentration and potentially a decrease in efficacy.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 67
+ },
+ "1": {
+  "description": "#Drug1 can cause an increase in the absorption of #Drug2 resulting in an increased serum concentration and potentially a worsening of adverse effects.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 18
+ },
+ "2": {
+  "description": "The absorption of #Drug2 can be decreased when combined with #Drug1.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 13
+ },
+ "3": {
+  "description": "The bioavailability of #Drug2 can be decreased when combined with #Drug1.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 3
+ },
+ "4": {
+  "description": "The bioavailability of #Drug2 can be increased when combined with #Drug1.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 62
+ },
+ "5": {
+  "description": "The metabolism of #Drug2 can be decreased when combined with #Drug1.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 47
+ },
+ "6": {
+  "description": "The metabolism of #Drug2 can be increased when combined with #Drug1.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 4
+ },
+ "7": {
+  "description": "The protein binding of #Drug2 can be decreased when combined with #Drug1.",
+  "severity": "Low",
+  "drugbank_interaction_type": 43
+ },
+ "8": {
+  "description": "The serum concentration of #Drug2 can be decreased when it is combined with #Drug1.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 75
+ },
+ "9": {
+  "description": "The serum concentration of #Drug2 can be increased when it is combined with #Drug1.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 73
+ },
+ "10": {
+  "description": "The serum concentration of the active metabolites of #Drug2 can be increased when #Drug2 is used in combination with #Drug1.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 77
+ },
+ "11": {
+  "description": "The serum concentration of the active metabolites of #Drug2 can be reduced when #Drug2 is used in combination with #Drug1 resulting in a loss in efficacy.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 11
+ },
+ "12": {
+  "description": "The therapeutic efficacy of #Drug2 can be decreased when used in combination with #Drug1.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 70
+ },
+ "13": {
+  "description": "The therapeutic efficacy of #Drug2 can be increased when used in combination with #Drug1.",
+  "severity": "Low",
+  "drugbank_interaction_type": 8
+ },
+ "14": {
+  "description": "#Drug1 may decrease the excretion rate of #Drug2 which could result in a higher serum level.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 72
+ },
+ "15": {
+  "description": "#Drug1 may increase the excretion rate of #Drug2 which could result in a lower serum level and potentially a reduction in efficacy.",
+  "severity": "Low",
+  "drugbank_interaction_type": 65
+ },
+ "16": {
+  "description": "#Drug1 may decrease the cardiotoxic activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 58
+ },
+ "17": {
+  "description": "#Drug1 may increase the cardiotoxic activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 15
+ },
+ "18": {
+  "description": "#Drug1 may increase the central neurotoxic activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 44
+ },
+ "19": {
+  "description": "#Drug1 may increase the hepatotoxic activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 80
+ },
+ "20": {
+  "description": "#Drug1 may increase the nephrotoxic activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 57
+ },
+ "21": {
+  "description": "#Drug1 may increase the neurotoxic activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 35
+ },
+ "22": {
+  "description": "#Drug1 may increase the ototoxic activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 7
+ },
+ "23": {
+  "description": "#Drug1 may decrease effectiveness of #Drug2 as a diagnostic agent.",
+  "severity": "Low",
+  "drugbank_interaction_type": 45
+ },
+ "24": {
+  "description": "The risk of a hypersensitivity reaction to #Drug2 is increased when it is combined with #Drug1.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 86
+ },
+ "25": {
+  "description": "The risk or severity of adverse effects can be increased when #Drug1 is combined with #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 49
+ },
+ "26": {
+  "description": "The risk or severity of bleeding can be increased when #Drug1 is combined with #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 66
+ },
+ "27": {
+  "description": "The risk or severity of heart failure can be increased when #Drug2 is combined with #Drug1.",
+  "severity": "High",
+  "drugbank_interaction_type": 50
+ },
+ "28": {
+  "description": "The risk or severity of hyperkalemia can be increased when #Drug1 is combined with #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 42
+ },
+ "29": {
+  "description": "The risk or severity of hypertension can be increased when #Drug2 is combined with #Drug1.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 31
+ },
+ "30": {
+  "description": "The risk or severity of hypotension can be increased when #Drug1 is combined with #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 56
+ },
+ "31": {
+  "description": "The risk or severity of QTc prolongation can be increased when #Drug1 is combined with #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 33
+ },
+ "32": {
+  "description": "#Drug1 may decrease the analgesic activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 52
+ },
+ "33": {
+  "description": "#Drug1 may decrease the anticoagulant activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 12
+ },
+ "34": {
+  "description": "#Drug1 may decrease the antihypertensive activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 37
+ },
+ "35": {
+  "description": "#Drug1 may decrease the antiplatelet activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 26
+ },
+ "36": {
+  "description": "#Drug1 may decrease the bronchodilatory activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 14
+ },
+ "37": {
+  "description": "#Drug1 may decrease the diuretic activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 29
+ },
+ "38": {
+  "description": "#Drug1 may decrease the neuromuscular blocking activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 17
+ },
+ "39": {
+  "description": "#Drug1 may decrease the sedative activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 76
+ },
+ "40": {
+  "description": "#Drug1 may decrease the stimulatory activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 61
+ },
+ "41": {
+  "description": "#Drug1 may decrease the vasoconstricting activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 5
+ },
+ "42": {
+  "description": "#Drug1 may increase the adverse neuromuscular activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 22
+ },
+ "43": {
+  "description": "#Drug1 may increase the analgesic activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 69
+ },
+ "44": {
+  "description": "#Drug1 may increase the anticholinergic activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 2
+ },
+ "45": {
+  "description": "#Drug1 may increase the anticoagulant activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 6
+ },
+ "46": {
+  "description": "#Drug1 may increase the antihypertensive activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 10
+ },
+ "47": {
+  "description": "#Drug1 may increase the antiplatelet activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 53
+ },
+ "48": {
+  "description": "#Drug1 may increase the antipsychotic activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 36
+ },
+ "49": {
+  "description": "#Drug1 may increase the arrhythmogenic activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 82
+ },
+ "50": {
+  "description": "#Drug1 may increase the atrioventricular blocking (AV block) activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 25
+ },
+ "51": {
+  "description": "#Drug1 may increase the bradycardic activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 54
+ },
+ "52": {
+  "description": "#Drug1 may increase the bronchoconstrictory activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 46
+ },
+ "53": {
+  "description": "#Drug1 may increase the central nervous system depressant (CNS depressant) activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 16
+ },
+ "54": {
+  "description": "#Drug1 may increase the central nervous system depressant (CNS depressant) and hypertensive activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 79
+ },
+ "55": {
+  "description": "#Drug1 may increase the constipating activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 39
+ },
+ "56": {
+  "description": "#Drug1 may increase the dermatologic adverse activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 28
+ },
+ "57": {
+  "description": "#Drug1 may increase the fluid retaining activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 74
+ },
+ "58": {
+  "description": "#Drug1 may increase the hypercalcemic activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 51
+ },
+ "59": {
+  "description": "#Drug1 may increase the hyperglycemic activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 78
+ },
+ "60": {
+  "description": "#Drug1 may increase the hyperkalemic activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 68
+ },
+ "61": {
+  "description": "#Drug1 may increase the hypertensive activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 71
+ },
+ "62": {
+  "description": "#Drug1 may increase the hypocalcemic activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 24
+ },
+ "63": {
+  "description": "#Drug1 may increase the hypoglycemic activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 9
+ },
+ "64": {
+  "description": "#Drug1 may increase the hypokalemic activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 83
+ },
+ "65": {
+  "description": "#Drug1 may increase the hyponatremic activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 55
+ },
+ "66": {
+  "description": "#Drug1 may increase the hypotensive activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 60
+ },
+ "67": {
+  "description": "#Drug1 may increase the hypotensive and central nervous system depressant (CNS depressant) activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 41
+ },
+ "68": {
+  "description": "#Drug1 may increase the immunosuppressive activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 34
+ },
+ "69": {
+  "description": "#Drug1 may increase the myelosuppressive activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 63
+ },
+ "70": {
+  "description": "#Drug1 may increase the myopathic rhabdomyolysis activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 48
+ },
+ "71": {
+  "description": "#Drug1 may increase the neuroexcitatory activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 27
+ },
+ "72": {
+  "description": "#Drug1 may increase the neuromuscular blocking activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 21
+ },
+ "73": {
+  "description": "#Drug1 may increase the orthostatic hypotensive activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 30
+ },
+ "74": {
+  "description": "#Drug1 may increase the photosensitizing activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 1
+ },
+ "75": {
+  "description": "#Drug1 may increase the QTc-prolonging activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 20
+ },
+ "76": {
+  "description": "#Drug1 may increase the respiratory depressant activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 40
+ },
+ "77": {
+  "description": "#Drug1 may increase the sedative activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 32
+ },
+ "78": {
+  "description": "#Drug1 may increase the serotonergic activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 64
+ },
+ "79": {
+  "description": "#Drug1 may increase the stimulatory activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 23
+ },
+ "80": {
+  "description": "#Drug1 may increase the tachycardic activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 85
+ },
+ "81": {
+  "description": "#Drug1 may increase the thrombogenic activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 81
+ },
+ "82": {
+  "description": "#Drug1 may increase the ulcerogenic activities of #Drug2.",
+  "severity": "High",
+  "drugbank_interaction_type": 59
+ },
+ "83": {
+  "description": "#Drug1 may increase the vasoconstricting activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 19
+ },
+ "84": {
+  "description": "#Drug1 may increase the vasodilatory activities of #Drug2.",
+  "severity": "Low",
+  "drugbank_interaction_type": 38
+ },
+ "85": {
+  "description": "#Drug1 may increase the vasopressor activities of #Drug2.",
+  "severity": "Medium",
+  "drugbank_interaction_type": 84
+ }
+}

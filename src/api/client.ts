@@ -6,7 +6,7 @@ const API_BASE_URL = rawBaseUrl.replace(/\/api\/v1\/?$/, '').replace(/\/$/, '');
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 90000, // 90s timeout threshold for ML & OCR processing
+  timeout: 150000, // free hosting tiers may need ~60 s to wake the ML service
   headers: {
     'Content-Type': 'application/json'
   }
@@ -27,7 +27,7 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    let errorMsg = 'Failed to connect to the ML pipeline. Is your FastAPI server running?';
+    let errorMsg = 'Could not reach the PharmAI server. Please check that it is running.';
     if (error.response?.data?.detail) {
       errorMsg = typeof error.response.data.detail === 'string'
         ? error.response.data.detail
@@ -42,18 +42,13 @@ apiClient.interceptors.response.use(
 );
 
 export const apiService = {
-  verifyToken: async (idToken: string) => {
-    const response = await apiClient.post('/api/v1/auth/verify-token', { idToken });
-    return response.data;
-  },
-
   extractPrescriptionOCR: async (imageBase64: string, fileName?: string) => {
     const response = await apiClient.post('/api/v1/ocr/extract-prescription', { imageBase64, fileName });
     return response.data;
   },
 
   predictInteraction: async (
-    patientData: { age: number; gender: string; egfr: number }, 
+    patientData: { age: number | null; gender: string; egfr: number | null }, 
     medications: any[],
     userId?: string
   ) => {
@@ -66,17 +61,8 @@ export const apiService = {
     return response.data;
   },
 
-  lookupKnowledgeBase: async (med1: string, med2: string) => {
-    const response = await apiClient.get('/api/v1/kb/lookup', {
-      params: { med1, med2 }
-    });
-    return response.data;
-  },
-
-  downloadPDFReport: async (reportPayload: any) => {
-    const response = await apiClient.post('/api/v1/reports/generate-pdf', reportPayload, {
-      responseType: 'blob'
-    });
+  getModelMetrics: async () => {
+    const response = await apiClient.get('/api/v1/model-metrics');
     return response.data;
   }
 };

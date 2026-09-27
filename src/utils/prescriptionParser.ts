@@ -1,280 +1,289 @@
+/**
+ * Prescription text parser: turns OCR text into patient details + medicine line items.
+ *
+ * Medicine names are recognised with shared/drug_vocabulary.json (generic names,
+ * Indian/US brand names, combination products) — the same dictionary the Python
+ * ML service uses — plus tolerance for small OCR spelling errors.
+ * Used by the Node server (OCR endpoint) and by the browser.
+ */
+import vocabulary from '../../shared/drug_vocabulary.json';
+
+export interface ParsedMedicine {
+  id: string;
+  name: string;          // name as written on the prescription (cleaned)
+  matchedAs: string;     // normalised display name, e.g. "Pantocid (Pantoprazole)"
+  generics: string[];    // active ingredients
+  dosage: string;
+  frequency: string;
+  duration?: string;
+  route: string;
+  matchType: 'generic' | 'brand' | 'combination' | 'non_chemical' | 'fuzzy';
+  sourceLine: string;
+}
+
 export interface ParsedPrescription {
   patientName?: string;
   patientAge?: number;
   patientGender?: string;
   diagnosis?: string;
-  medicines: Array<{
-    id: string;
-    name: string;
-    dosage: string;
-    frequency: string;
-    duration?: string;
-    route: string;
-    instructions?: string;
-  }>;
+  medicines: ParsedMedicine[];
 }
 
-const NON_MEDICINE_WORDS = new Set([
-  'quest', 'care', 'medical', 'clinic', 'anand', 'society', 'dindayal', 'road', 
-  'ghatkopar', 'mumbai', 'patient', 'female', 'male', 'years', 'yrs', 'y/o', 'date', 
-  'doctor', 'dr', 'mr', 'mrs', 'mds', 'md', 'mbbs', 'registration', 'no', 'reg',
-  'complaint', 'full', 'body', 'pain', 'weakness', 'feeling', 'observations', 
-  'high', 'temperature', 'reddish', 'eye', 'investigations', 'suggested', 'cratine', 
-  'creatinine', 'cbc', 'count', 'blood', 'diagnosis', 'dengue', 'fever', 'rx', 
-  'medicine', 'dosage', 'duration', 'measure', 'instructions', 'remarks', 'keep', 
-  'measuring', 'twice', 'day', 'days', 'next', 'follow-up', 'friday', 'may', 'pm', 
-  'am', 'authorised', 'signature', 'computer', 'generated', 'document', 'ph', 
-  'phone', 'address', 'hospital', 'page', 'scanned', 'script', 'after', 'meal',
-  'before', 'bhukya', 'pete', 'insert', 'name', 'tablets', 'health', 'choice',
-  'riverside', 'bingham', 'youremail', 'yourwebsite', 'prescription', 'contact',
-  'num', 'matthew', 'vestal', 'usa', 'malaria', 'chills', 'headache', 'findings',
-  'advice', 'rest', 'food', 'digest', 'boiled', 'rice', 'daal', 'tot', 'tab', 'cap'
-]);
+type Kind = 'generic' | 'brand' | 'combination' | 'non_chemical';
 
-function isGibberishToken(str: string): boolean {
-  if (!str || str.trim().length < 3) return true;
-  const clean = str.trim();
-  // Filter 0-vowel font tokens like TtR, GWD, GqV, GGrK
-  const hasVowels = /[aeiouy]/i.test(clean);
-  if (!hasVowels) return true;
-  return false;
+interface VocabDrug { name: string; class: string | null; synonyms: string[]; extended?: boolean }
+const drugs = (vocabulary as any).drugs as Record<string, VocabDrug>;
+const combos = (vocabulary as any).combinations as Record<string, { name: string; components: string[] }>;
+const nonChemical = (vocabulary as any).non_chemical_products as Record<string, { name: string; class: string }>;
+const SALT_WORDS = new Set<string>((vocabulary as any).salt_words);
+
+const FORM_WORDS = new Set(['tab', 'tabs', 'tablet', 'tablets', 'cap', 'caps', 'capsule', 'capsules', 'syp', 'syrup',
+  'inj', 'injection', 'susp', 'suspension', 'oral', 'drops', 'gel', 'cream', 'mg', 'mcg', 'g', 'ml', 'iu', 'meq', 'units', 'rx']);
+// Words that look like drug names to the fuzzy matcher but are common on prescriptions
+const FUZZY_STOPWORDS = new Set(['patient', 'doctor', 'daily', 'morning', 'evening', 'tablet', 'tablets', 'capsule',
+  'before', 'after', 'meals', 'dinner', 'breakfast', 'bedtime', 'hospital', 'clinic', 'medical', 'prescription',
+  'diagnosis', 'female', 'gender', 'address', 'signature', 'refills', 'dispense', 'quantity', 'directions', 'medicine',
+  'medication', 'medications', 'physician', 'general', 'center', 'centre', 'health', 'record', 'hypertension', 'diabetes',
+  'fever', 'infection', 'pressure', 'weeks', 'months', 'twice', 'thrice', 'needed', 'mouth']);
+
+const clean = (t: string) => t.toLowerCase()
+  .replace(/(\d)([a-z])/g, '$1 $2')
+  .replace(/[^a-z0-9+ ]+/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+const LOOKUP = new Map<string, { kind: Kind; key: string }>();
+for (const [g, d] of Object.entries(drugs)) {
+  LOOKUP.set(clean(g), { kind: 'generic', key: g });
+  for (const s of d.synonyms) if (!LOOKUP.has(clean(s))) LOOKUP.set(clean(s), { kind: 'brand', key: g });
+}
+for (const b of Object.keys(combos)) LOOKUP.set(clean(b), { kind: 'combination', key: b });
+for (const n of Object.keys(nonChemical)) if (!LOOKUP.has(clean(n))) LOOKUP.set(clean(n), { kind: 'non_chemical', key: n });
+// OCR often drops the space in short brand names: "Pan D" -> "PanD", "Pan 40" -> "Pan40"
+for (const [k, v] of [...LOOKUP.entries()]) {
+  const joined = k.replace(/ /g, '');
+  if (k.includes(' ') && joined.length >= 4 && !LOOKUP.has(joined)) LOOKUP.set(joined, v);
+}
+const MAX_NGRAM = Math.max(...[...LOOKUP.keys()].map((k) => k.split(' ').length));
+// spelling correction only for the curated drugs (the extended DrugBank names match exactly)
+const FUZZY_KEYS = [...LOOKUP.entries()]
+  .filter(([k, v]) => !k.includes(' ') && k.length >= 5 && !(drugs[v.key] as any)?.extended)
+  .map(([k]) => k);
+
+const titleCase = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase());
+
+function displayName(generic: string): string {
+  return drugs[generic]?.name || nonChemical[generic]?.name || titleCase(generic);
 }
 
-const KNOWN_DRUGS_DICTIONARY: Record<string, { standardName: string; category: string; keyTokens: string[] }> = {
-  'paracetamol': { standardName: 'Paracetamol 500mg', category: 'Analgesic & Antipyretic', keyTokens: ['paracetamol', 'acetaminophen'] },
-  'acetaminophen': { standardName: 'Paracetamol 500mg', category: 'Analgesic & Antipyretic', keyTokens: ['paracetamol', 'acetaminophen'] },
-  'calpol': { standardName: 'Calpol 650mg', category: 'Analgesic & Antipyretic', keyTokens: ['calpol'] },
-  'crocin': { standardName: 'Crocin 650mg', category: 'Analgesic & Antipyretic', keyTokens: ['crocin'] },
-  'dolo': { standardName: 'Dolo 650mg', category: 'Analgesic & Antipyretic', keyTokens: ['dolo'] },
-  'combiflam': { standardName: 'Combiflam (Ibuprofen + Paracetamol)', category: 'NSAID & Analgesic', keyTokens: ['combiflam'] },
-  'ibuprofen': { standardName: 'Ibuprofen 400mg', category: 'NSAID Analgesic', keyTokens: ['ibuprofen', 'motrin', 'advil'] },
-  'naproxen': { standardName: 'Naproxen Sodium 500mg', category: 'NSAID Anti-inflammatory', keyTokens: ['naproxen', 'aleve'] },
-  'rantac': { standardName: 'Rantac (Ranitidine 150mg)', category: 'H2 Receptor Antagonist', keyTokens: ['rantac', 'ranitidine'] },
-  'ranitidine': { standardName: 'Ranitidine 150mg', category: 'H2 Receptor Antagonist', keyTokens: ['rantac', 'ranitidine'] },
-  'sm fibro': { standardName: 'Cap SM Fibro', category: 'Nutritional Antioxidant', keyTokens: ['sm fibro', 'fibro'] },
-  'fibro': { standardName: 'Cap SM Fibro', category: 'Nutritional Antioxidant', keyTokens: ['sm fibro', 'fibro'] },
-  'pan 40': { standardName: 'Pan 40 (Pantoprazole 40mg)', category: 'Proton Pump Inhibitor', keyTokens: ['pan 40', 'pantoprazole'] },
-  'pantocid': { standardName: 'Pantocid 40mg', category: 'Proton Pump Inhibitor', keyTokens: ['pantocid', 'pantoprazole'] },
-  'pantoprazole': { standardName: 'Pantoprazole 40mg', category: 'Proton Pump Inhibitor', keyTokens: ['pantoprazole'] },
-  'omeprazole': { standardName: 'Omeprazole 20mg', category: 'Proton Pump Inhibitor', keyTokens: ['omeprazole'] },
-  'warfarin': { standardName: 'Warfarin 5mg', category: 'Anticoagulant', keyTokens: ['warfarin'] },
-  'aspirin': { standardName: 'Aspirin 81mg', category: 'Antiplatelet NSAID', keyTokens: ['aspirin'] },
-  'lisinopril': { standardName: 'Lisinopril 20mg', category: 'ACE Inhibitor', keyTokens: ['lisinopril'] },
-  'metformin': { standardName: 'Metformin 500mg', category: 'Antidiabetic', keyTokens: ['metformin'] },
-  'atorvastatin': { standardName: 'Atorvastatin 20mg', category: 'Statin', keyTokens: ['atorvastatin'] },
-  'clopidogrel': { standardName: 'Clopidogrel 75mg', category: 'Antiplatelet', keyTokens: ['clopidogrel'] },
-  'fluoxetine': { standardName: 'Fluoxetine 20mg', category: 'SSRI Antidepressant', keyTokens: ['fluoxetine'] },
-  'tramadol': { standardName: 'Tramadol 50mg', category: 'Opioid Analgesic', keyTokens: ['tramadol'] },
-  'amoxicillin': { standardName: 'Amoxicillin 500mg', category: 'Antibiotic', keyTokens: ['amoxicillin'] },
-  'augmentin': { standardName: 'Augmentin 625mg', category: 'Broad Spectrum Antibiotic', keyTokens: ['augmentin'] },
-  'ciprofloxacin': { standardName: 'Ciprofloxacin 500mg', category: 'Antibiotic', keyTokens: ['ciprofloxacin'] },
-  'azithromycin': { standardName: 'Azithromycin 500mg', category: 'Antibiotic', keyTokens: ['azithromycin'] },
-  'doxycycline': { standardName: 'Doxycycline 100mg', category: 'Antibiotic', keyTokens: ['doxycycline'] },
-  'diclofenac': { standardName: 'Diclofenac 50mg', category: 'NSAID', keyTokens: ['diclofenac'] },
-  'telmisartan': { standardName: 'Telmisartan 40mg', category: 'ARBA Antihypertensive', keyTokens: ['telmisartan'] },
-  'amlodipine': { standardName: 'Amlodipine 5mg', category: 'Calcium Channel Blocker', keyTokens: ['amlodipine'] },
-  'montelukast': { standardName: 'Montelukast 10mg', category: 'Leukotriene Receptor Antagonist', keyTokens: ['montelukast'] },
-  'cetirizine': { standardName: 'Cetirizine 10mg', category: 'Antihistamine', keyTokens: ['cetirizine'] },
-  'spironolactone': { standardName: 'Spironolactone 25mg', category: 'Potassium Sparing Diuretic', keyTokens: ['spironolactone'] },
-  'furosemide': { standardName: 'Furosemide 40mg', category: 'Loop Diuretic', keyTokens: ['furosemide', 'lasix'] },
-  'lasix': { standardName: 'Lasix (Furosemide 40mg)', category: 'Loop Diuretic', keyTokens: ['lasix', 'furosemide'] },
-  'potassium': { standardName: 'Potassium Chloride 20mEq', category: 'Electrolyte Supplement', keyTokens: ['potassium'] },
-  'gabapentin': { standardName: 'Gabapentin 300mg', category: 'Neuropathic Agent', keyTokens: ['gabapentin'] },
-  'levothyroxine': { standardName: 'Levothyroxine 50mcg', category: 'Thyroid Hormone', keyTokens: ['levothyroxine', 'eltroxin'] },
-  'digoxin': { standardName: 'Digoxin 0.25mg', category: 'Cardiac Glycoside', keyTokens: ['digoxin', 'lanoxin'] },
-  'lanoxin': { standardName: 'Lanoxin (Digoxin 0.25mg)', category: 'Cardiac Glycoside', keyTokens: ['lanoxin', 'digoxin'] },
-  'abciximab': { standardName: 'Tab. Abciximab 10mg', category: 'Glycoprotein IIb/IIIa Antiplatelet', keyTokens: ['abciximab'] },
-  'vomilast': { standardName: 'Tab. Vomilast (Doxylamine 10mg + Pyridoxine 10mg + Folic Acid 2.5mg)', category: 'Antiemetic & Antinauseant', keyTokens: ['vomilast', 'doxylamine', 'pyridoxine'] },
-  'doxylamine': { standardName: 'Doxylamine 10mg + Pyridoxine 10mg', category: 'Antiemetic & Antinauseant', keyTokens: ['doxylamine', 'vomilast'] },
-  'zoclar': { standardName: 'Cap. Zoclar 500 (Clarithromycin 500mg)', category: 'Macrolide Antibiotic', keyTokens: ['zoclar', 'clarithromycin'] },
-  'clarithromycin': { standardName: 'Clarithromycin 500mg', category: 'Macrolide Antibiotic', keyTokens: ['clarithromycin', 'zoclar'] },
-  'gestakind': { standardName: 'Tab. Gestakind 10/SR (Isoxsuprine 10mg)', category: 'Uterine Relaxant & Peripheral Vasodilator', keyTokens: ['gestakind', 'isoxsuprine'] },
-  'isoxsuprine': { standardName: 'Isoxsuprine 10mg', category: 'Uterine Relaxant & Peripheral Vasodilator', keyTokens: ['isoxsuprine', 'gestakind'] }
-};
+/** Normalised Levenshtein similarity: 1 - editDistance / longerLength. */
+function similarity(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  const d: number[] = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    let prev = d[0];
+    d[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const tmp = d[j];
+      d[j] = Math.min(d[j] + 1, d[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = tmp;
+    }
+  }
+  return 1 - d[n] / Math.max(m, n);
+}
+
+function fuzzyLookup(token: string) {
+  if (token.length < 5 || FORM_WORDS.has(token) || SALT_WORDS.has(token) || FUZZY_STOPWORDS.has(token)) return null;
+  let best: string | null = null;
+  let bestScore = 0;
+  for (const k of FUZZY_KEYS) {
+    if (Math.abs(k.length - token.length) > 2) continue;
+    const s = similarity(token, k);
+    if (s > bestScore) { bestScore = s; best = k; }
+  }
+  // at most one edit for short words, two for long words
+  const needed = token.length >= 9 ? 0.78 : 0.83;
+  return best && bestScore >= needed ? LOOKUP.get(best)! : null;
+}
+
+export interface DrugMention { kind: Kind | 'fuzzy'; key: string; generics: string[]; text: string; display: string }
+
+/** Find every drug mentioned in a line of text (longest match first). */
+export function findDrugs(text: string): DrugMention[] {
+  const tokens = clean(text).split(' ').filter(Boolean);
+  const found: DrugMention[] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    let hit: { n: number; kind: Kind; key: string; fuzzy: boolean } | null = null;
+    for (let n = Math.min(MAX_NGRAM, tokens.length - i); n > 0; n--) {
+      const entry = LOOKUP.get(tokens.slice(i, i + n).join(' '));
+      if (entry) { hit = { n, ...entry, fuzzy: false }; break; }
+    }
+    if (!hit) {
+      // OCR sometimes glues the dosage form to the name: "TabPanD", "CapZoclar"
+      const glued = tokens[i].match(/^(tab|tabs|cap|caps|inj|syp|syr)([a-z0-9]{3,})$/);
+      const entry = glued ? LOOKUP.get(glued[2]) : undefined;
+      if (entry) hit = { n: 1, ...entry, fuzzy: false };
+    }
+    if (!hit) {
+      const fz = fuzzyLookup(tokens[i]);
+      if (fz) hit = { n: 1, ...fz, fuzzy: true };
+    }
+    if (hit) {
+      const generics = hit.kind === 'combination' ? combos[hit.key].components : [hit.key];
+      const text = tokens.slice(i, i + hit.n).join(' ');
+      let display: string;
+      if (hit.kind === 'combination') display = `${combos[hit.key].name} (${generics.map(displayName).join(' + ')})`;
+      else if (hit.kind === 'brand') display = `${titleCase(text)} (${displayName(hit.key)})`;
+      else display = displayName(hit.key);
+      found.push({ kind: hit.fuzzy ? 'fuzzy' : hit.kind, key: hit.key, generics, text, display });
+      i += hit.n;
+      while (i < tokens.length && SALT_WORDS.has(tokens[i])) i++; // "Losartan Potassium"
+    } else {
+      i++;
+    }
+  }
+  return found;
+}
+
+const DOSE_RE = /(\d+(?:\.\d+)?\s*(?:\/\s*\d+(?:\.\d+)?\s*)?(?:mg|mcg|µg|g|ml|iu|meq|units?)\b)/i;
+
+function extractFrequency(line: string): string {
+  const l = line.toLowerCase();
+  const pattern = l.match(/\b([01])\s*-\s*([01])\s*-\s*([01])\b/);
+  if (pattern) {
+    const n = pattern.slice(1).filter((x) => x === '1').length;
+    const label = n === 3 ? 'Three times daily' : n === 2 ? 'Twice daily' : 'Once daily';
+    return `${label} (${pattern[1]}-${pattern[2]}-${pattern[3]})`;
+  }
+  const every = l.match(/every\s+(\d+)\s*(?:hours|hrs|hr|h)\b/);
+  if (every) return `Every ${every[1]} hours${/prn|as needed/.test(l) ? ' as needed' : ''}`;
+  if (/\b(thrice|three times)\b|\btds\b|\btid\b/.test(l)) return 'Three times daily';
+  if (/\b(twice|two times)\b|\bbd\b|\bbid\b/.test(l)) return 'Twice daily';
+  if (/\bqid\b|four times/.test(l)) return 'Four times daily';
+  if (/\bhs\b|bedtime|at night|\bnight\b/.test(l)) return 'Once daily at bedtime';
+  if (/\bonce\b|\bod\b|\bdaily\b|every day|\bqd\b/.test(l)) return /morning/.test(l) ? 'Once daily (morning)' : 'Once daily';
+  if (/\bprn\b|as needed|sos/.test(l)) return 'As needed';
+  return '';
+}
+
+function extractRoute(line: string): string {
+  const l = line.toLowerCase();
+  if (/\binj\b|injection|\biv\b|\bim\b|subcut/.test(l)) return 'Injection';
+  if (/inhal|puff|inhaler/.test(l)) return 'Inhalation';
+  if (/cream|ointment|gel\b|topical/.test(l)) return 'Topical';
+  if (/drops?\b/.test(l)) return 'Drops';
+  return 'Oral';
+}
 
 export function parsePrescriptionOCR(ocrText: string): ParsedPrescription {
-  if (!ocrText) {
-    return { medicines: [] };
+  if (!ocrText || !ocrText.trim()) return { medicines: [] };
+
+  const lines = ocrText.split(/\r?\n/).map((l) => l.replace(/[|[\]{}]/g, ' ').replace(/\s+/g, ' ').trim()).filter(Boolean);
+
+  // ---- patient details ----------------------------------------------------
+  let patientName: string | undefined;
+  const nameMatch = ocrText.match(/(?:patient(?:\s*name)?|name)\s*[:\-]\s*([A-Za-z][A-Za-z .'\-]{1,40})/i);
+  if (nameMatch) {
+    const raw = nameMatch[1].split(/\s{2,}|\b(?:age|gender|sex|date|dob|clinic|id|mob|phone)\b|\(|,/i)[0].trim();
+    if (raw.length >= 3 && findDrugs(raw).length === 0) patientName = titleCase(raw.toLowerCase());
   }
 
-  // Clean OCR lines
-  const rawLines = ocrText
-    .split('\n')
-    .map(l => l.replace(/[[\]]/g, ' ').trim())
-    .filter(l => l.length > 0);
-    
-  const textLower = ocrText.toLowerCase();
+  let patientAge: number | undefined;
+  const ageMatch = ocrText.match(/\bage\s*[:\-/]?\s*(\d{1,3})/i) || ocrText.match(/\b(\d{1,3})\s*(?:yrs?|years?|y\/o)\b/i);
+  if (ageMatch) {
+    const a = parseInt(ageMatch[1], 10);
+    if (a > 0 && a < 120) patientAge = a;
+  }
 
-  // 1. Patient Name Extraction
-  let patientName: string | undefined;
-  const namePatterns = [
-    /ID:\s*\d+\s*-\s*([A-Za-z0-9\s]+?)(?=\s*\(|\s*\/|\s*Mob|\s*Date|\s*$)/i,
-    /(?:Patient|Name)\s*[:\-]?\s*\[?([A-Za-z\s\.\'\-]+)\]?/i,
-    /Mr\.\/Ms\.\/Mrs\.\s*[:\.]?\s*\[?([A-Za-z\s\.\'\-]+)\]?/i
-  ];
-  for (const pat of namePatterns) {
-    const m = ocrText.match(pat);
-    if (m && m[1]) {
-      let raw = m[1].replace(/[[\]]/g, '').split(/\n|,|Female|Male|Address|Date|Dr|Phone/i)[0].trim();
-      if (raw.length > 2 && !NON_MEDICINE_WORDS.has(raw.toLowerCase())) {
-        patientName = raw;
-        break;
-      }
+  let patientGender: string | undefined;
+  const genderMatch = ocrText.match(/\b(?:gender|sex)\s*[:\-]?\s*(male|female|m|f)\b/i);
+  if (genderMatch) patientGender = genderMatch[1].toLowerCase().startsWith('f') ? 'Female' : 'Male';
+  else if (/\bfemale\b/i.test(ocrText)) patientGender = 'Female';
+  else if (/\bmale\b/i.test(ocrText)) patientGender = 'Male';
+
+  // table layout: "PATIENT: AGE: GENDER:" header with the values on the next line
+  const headerIdx = lines.findIndex((l) => /patient\s*:?\s*age\s*:?/i.test(l));
+  if (headerIdx >= 0 && lines[headerIdx + 1]) {
+    const row = lines[headerIdx + 1].match(/^([A-Za-z][A-Za-z .'\-]+?)\s+(\d{1,3})\s+(male|female|m|f)\b/i);
+    if (row) {
+      patientName = patientName || titleCase(row[1].toLowerCase());
+      patientAge = patientAge || parseInt(row[2], 10);
+      patientGender = patientGender || (row[3].toLowerCase().startsWith('f') ? 'Female' : 'Male');
     }
   }
 
-  // 2. Patient Age Extraction
-  let patientAge: number | undefined;
-  const ageMatch = ocrText.match(/(?:Age|Yrs)\s*[:\/\-]?\s*\[?(\d{1,3})/i) || ocrText.match(/(\d{1,3})\s*(?:Yrs|Years|\s*Y\b)/i) || ocrText.match(/,\s*(\d{1,3})\s*years/i);
-  if (ageMatch) {
-    patientAge = parseInt(ageMatch[1], 10);
+  // "Patient Information" heading with the bare name on the next line (two-column layouts)
+  if (!patientName) {
+    const infoIdx = lines.findIndex((l) => /^patient\s+(information|details)/i.test(l));
+    const next = infoIdx >= 0 ? lines[infoIdx + 1] : undefined;
+    const bare = next?.split(/\s+(?:dr\.?|doctor)\s/i)[0].match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})\b/);
+    if (bare && findDrugs(bare[1]).length === 0) patientName = bare[1];
   }
 
-  // 3. Patient Gender Extraction
-  let patientGender: string | undefined;
-  if (/\(M\)|\bMale\b/i.test(ocrText)) {
-    patientGender = 'Male';
-  } else if (/\(F\)|\bFemale\b/i.test(ocrText)) {
-    patientGender = 'Female';
-  }
-
-  // 4. Clinical Diagnosis
   let diagnosis: string | undefined;
-  const diagMatch = ocrText.match(/Diagnosis\s*[:\-]?\s*[\*\-\s]*([^\n\r]+)/i);
-  if (diagMatch && diagMatch[1]) {
-    diagnosis = diagMatch[1].replace(/Rx.*$/i, '').replace(/[\*\-]/g, '').trim();
-  }
+  const diagMatch = ocrText.match(/(?:diagnosis|dx|impression)\s*[:\-]\s*([^\n\r]+)/i);
+  if (diagMatch) diagnosis = diagMatch[1].trim();
 
-  // 5. Medicines Extraction with Strict Deduplication
-  const medicines: ParsedPrescription['medicines'] = [];
-  const addedTokensSet = new Set<string>();
+  // ---- medicines ------------------------------------------------------------
+  const medicines: ParsedMedicine[] = [];
+  const seen = new Set<string>();
+  const skipLine = /^(?:patient|name|age|gender|sex|date|dob|diagnosis|dr\b|doctor|reg|phone|address|clinic|hospital|signature)/i;
 
-  // A. Search Dictionary Matches first
-  for (const [key, info] of Object.entries(KNOWN_DRUGS_DICTIONARY)) {
-    if (textLower.includes(key)) {
-      const alreadyAdded = Array.from(addedTokensSet).some(t => 
-        t === info.standardName.toLowerCase() || info.keyTokens.some(kt => kt.toLowerCase() === t)
-      );
-      if (alreadyAdded) continue;
-
-      addedTokensSet.add(info.standardName.toLowerCase());
-      info.keyTokens.forEach(t => addedTokensSet.add(t.toLowerCase()));
-
-      let dosage = info.standardName.match(/\d+(?:\/\w+)?\s*(?:mg|g|ml|mcg|mEq)/i)?.[0] || 'As Prescribed';
-      let frequency = 'Daily (Oral)';
-      let duration = '5 days';
-
-      const matchingLine = rawLines.find(l => l.toLowerCase().includes(key));
-      if (matchingLine) {
-        const doseM = matchingLine.match(/\d+(?:\/\w+)?\s*(?:mg|g|ml|mcg|mEq)/i);
-        if (doseM) dosage = doseM[0];
-
-        const durM = matchingLine.match(/\d+\s*days?/i);
-        if (durM) duration = durM[0];
-
-        if (/1\s*morning,\s*1\s*night/i.test(matchingLine)) frequency = 'Twice Daily (1 Morning, 1 Night)';
-        else if (/1\s*morning/i.test(matchingLine)) frequency = 'Once Daily (Morning)';
-        else if (/1\s*night/i.test(matchingLine)) frequency = 'Once Daily (Night)';
-        else if (/1-1-1/i.test(matchingLine)) frequency = 'Thrice Daily (1-1-1) After Meal';
-        else if (/1-0-1/i.test(matchingLine)) frequency = 'Twice Daily (1-0-1)';
-        else if (/1-0-0/i.test(matchingLine)) frequency = 'Once Daily (1-0-0)';
-      } else {
-        if (textLower.includes('thrice a day') || textLower.includes('1-1-1')) frequency = 'Thrice Daily (1-1-1) After Meal';
-        else if (textLower.includes('once a day') || textLower.includes('1-0-0')) frequency = 'Once Daily (1-0-0)';
-        else if (textLower.includes('twice a day') || textLower.includes('1-0-1')) frequency = 'Twice Daily (1-0-1)';
-      }
-
+  lines.forEach((line, idx) => {
+    if (skipLine.test(line) && !DOSE_RE.test(line)) return;
+    const mentions = findDrugs(line);
+    if (!mentions.length) return;
+    // directions often follow on the next lines ("Sig: Take 1 tablet daily") until the next medicine
+    const following: string[] = [];
+    for (let k = idx + 1; k < Math.min(lines.length, idx + 6); k++) {
+      if (findDrugs(lines[k]).length || skipLine.test(lines[k]) || /^(advice|review|note|follow|investigation)/i.test(lines[k])) break;
+      following.push(lines[k]);
+    }
+    const context = [line, ...following].join(' ');
+    // a line like "Combiflam (Ibuprofen 400mg + Paracetamol 325mg)" is one product
+    const primary = mentions[0].kind === 'combination' ? [mentions[0]] : mentions.filter((m, k) =>
+      k === 0 || !mentions.slice(0, k).some((prev) => prev.kind === 'brand' && prev.generics.some((g) => m.generics.includes(g))));
+    for (const m of primary) {
+      const dedupeKey = m.generics.slice().sort().join('+');
+      if (seen.has(dedupeKey)) continue;
+      seen.add(dedupeKey);
+      const afterName = line.toLowerCase().indexOf(m.text.split(' ')[0]);
+      const doseSource = afterName >= 0 ? line.slice(afterName) : line;
+      // "Dolo 650" / "Augmentin 625": a bare number right after the name is the strength in mg
+      const bare = doseSource.slice(m.text.length).match(/^[\s.:-]*(\d{2,4})(?![\d-])(?=\s|$)/);
+      const dose = doseSource.match(DOSE_RE)?.[1]?.replace(/\s+/g, '') || (bare ? `${bare[1]}mg` : '');
+      const duration = context.match(/(?:for\s+)?(\d+)\s*(days?|weeks?|months?)\b/i);
       medicines.push({
         id: `ocr-med-${medicines.length + 1}`,
-        name: info.standardName,
-        dosage,
-        frequency,
-        duration,
-        route: 'Oral'
+        name: m.display,
+        matchedAs: m.display,
+        generics: m.generics,
+        dosage: dose,
+        frequency: extractFrequency(context),
+        duration: duration ? `${duration[1]} ${duration[2]}` : undefined,
+        route: extractRoute(line),
+        matchType: m.kind,
+        sourceLine: line,
       });
     }
+  });
+
+  return { patientName, patientAge, patientGender, diagnosis, medicines };
+}
+
+/** Normalise a single medicine name typed by the user (Manual Entry autocomplete / review step). */
+export function normalizeMedicineName(name: string): DrugMention | null {
+  return findDrugs(name)[0] || null;
+}
+
+/** All names the dictionary knows (for autocomplete). */
+export function knownMedicineNames(): string[] {
+  const names = new Set<string>();
+  for (const [g, d] of Object.entries(drugs)) {
+    names.add(displayName(g));
+    for (const s of d.synonyms) if (s.length > 3) names.add(`${titleCase(s)} (${displayName(g)})`);
   }
-
-  // B. Parse General Prescription Line Items (e.g. "1. Metformin 500mg", "Tab. Warfarin 5mg")
-  for (let rawLine of rawLines) {
-    if (rawLine.toLowerCase().includes('insert medicine name')) continue;
-
-    // Strip leading numbers or prefixes like "1. ", "2) ", "Rx: ", "Tab. ", "Cap. "
-    const cleanedLine = rawLine.replace(/^(?:\d+[\.\)]\s*|Rx[:\.]?\s*|(?:Tab|Cap|Inj|Syr|T\.)\.?\s*)/i, '').trim();
-
-    // Check if line contains a dosage or frequency indicator
-    if (/\d+\s*(?:mg|g|ml|tablets?|capsules?|mEq|mcg)/i.test(cleanedLine) || /(?:once|twice|thrice)\s*a?\s*day/i.test(cleanedLine)) {
-      const doseMatch = cleanedLine.match(/\d+\s*(?:mg|g|ml|tablets?|capsules?|mEq|mcg)/i);
-      let drugName = '';
-      let dosage = 'As Prescribed';
-
-      if (doseMatch && doseMatch.index !== undefined && doseMatch.index > 0) {
-        drugName = cleanedLine.substring(0, doseMatch.index).replace(/[^A-Za-z\s]/g, '').trim();
-        dosage = doseMatch[0];
-      } else {
-        const parts = cleanedLine.split(/[,;]/);
-        drugName = parts[0].replace(/[^A-Za-z\s]/g, '').trim();
-      }
-
-      const cleanLower = drugName.toLowerCase();
-      if (drugName.length >= 3 && !isGibberishToken(drugName) && !Array.from(addedTokensSet).some(t => cleanLower.includes(t) || t.includes(cleanLower))) {
-        const isForbidden = drugName.split(' ').some(w => NON_MEDICINE_WORDS.has(w.toLowerCase()));
-        if (!isForbidden) {
-          addedTokensSet.add(cleanLower);
-
-          let frequency = 'Daily (Oral)';
-          if (/thrice\s*a?\s*day|1-1-1/i.test(cleanedLine)) frequency = 'Thrice Daily (1-1-1) After Meal';
-          else if (/once\s*a?\s*day|1-0-0/i.test(cleanedLine)) frequency = 'Once Daily (1-0-0)';
-          else if (/twice\s*a?\s*day|1-0-1/i.test(cleanedLine)) frequency = 'Twice Daily (1-0-1)';
-
-          medicines.push({
-            id: `ocr-rxline-${medicines.length + 1}`,
-            name: drugName.charAt(0).toUpperCase() + drugName.slice(1),
-            dosage,
-            frequency,
-            duration: '5 days',
-            route: 'Oral'
-          });
-        }
-      }
-    }
-  }
-
-  // C. General Numbered / Prefixed Line Item Fallback (e.g., "1. Metformin 500mg", "Tab. Dolo 650mg")
-  if (medicines.length === 0) {
-    for (const line of rawLines) {
-      if (line.toLowerCase().includes('insert medicine name') || line.length < 4) continue;
-      
-      const numMatch = line.match(/^(?:\d+[\.\)]\s*|(?:Tab|Cap|Inj|Syr)\.?\s*)([A-Za-z\s\d\-]+)/i);
-      if (numMatch && numMatch[1]) {
-        let rawDrugStr = numMatch[1].trim();
-        const drugParts = rawDrugStr.split(/\s(?=\d)/);
-        let drugName = drugParts[0].replace(/[^A-Za-z\s]/g, '').trim();
-        
-        if (drugName.length > 2 && !NON_MEDICINE_WORDS.has(drugName.toLowerCase()) && !addedTokensSet.has(drugName.toLowerCase())) {
-          addedTokensSet.add(drugName.toLowerCase());
-          const doseMatch = line.match(/\d+\s*(?:mg|g|ml|mEq|mcg)/i);
-          const dosage = doseMatch ? doseMatch[0] : 'As Prescribed';
-
-          medicines.push({
-            id: `ocr-fallback-${medicines.length + 1}`,
-            name: drugName.charAt(0).toUpperCase() + drugName.slice(1),
-            dosage,
-            frequency: 'Daily (Oral)',
-            duration: '5 days',
-            route: 'Oral'
-          });
-        }
-      }
-    }
-  }
-
-  // D. Return extracted medicines (or empty array if no medications were recognized)
-  return {
-    patientName: patientName || 'Prescription Patient',
-    patientAge: patientAge || 45,
-    patientGender: patientGender || 'Female',
-    diagnosis,
-    medicines
-  };
+  for (const [b, c] of Object.entries(combos)) names.add(`${c.name} (${c.components.map(displayName).join(' + ')})`);
+  return [...names].sort();
 }

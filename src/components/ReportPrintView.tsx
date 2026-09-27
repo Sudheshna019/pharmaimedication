@@ -70,7 +70,7 @@ export const ReportPrintView: React.FC<ReportPrintViewProps> = ({
           <div className="space-y-1">
             <p className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">PATIENT INFORMATION</p>
             <p className="font-bold text-sm text-slate-900">{result.patientName}</p>
-            <p className="text-slate-600">ID: {result.patientId} • {result.patientAge} Yrs ({result.patientGender})</p>
+            <p className="text-slate-600">ID: {result.patientId} • {result.patientAge ? `${result.patientAge} Yrs` : 'Age not given'} ({result.patientGender})</p>
           </div>
 
           <div className="space-y-1 text-right">

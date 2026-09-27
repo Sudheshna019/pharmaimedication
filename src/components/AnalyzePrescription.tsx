@@ -31,7 +31,7 @@ import { AnalysisResult, ClinicianUser } from '../types';
 import { enrichAnalysisWithDetails } from '../utils/pharmacology';
 import { parsePrescriptionOCR } from '../utils/prescriptionParser';
 
-import { syncAnalysisToFirestore, auth } from '../firebase';
+import { syncAnalysisToFirestore } from '../firebase';
 
 import * as pdfjsLib from 'pdfjs-dist';
 
@@ -130,11 +130,16 @@ export const AnalyzePrescription: React.FC<AnalyzePrescriptionProps> = ({
         // Client-side Canvas Image Compression for Instant Upload
         const img = new Image();
         img.onload = () => {
-          const maxDim = 1600;
+          const maxDim = 2000;
+          const minDim = 1400; // small photos are upscaled so Tesseract can read the text
           let width = img.width;
           let height = img.height;
 
-          if (width > maxDim || height > maxDim) {
+          if (Math.max(width, height) < minDim) {
+            const scale = minDim / Math.max(width, height);
+            width = Math.round(width * scale);
+            height = Math.round(height * scale);
+          } else if (width > maxDim || height > maxDim) {
             if (width > height) {
               height = Math.round((height * maxDim) / width);
               width = maxDim;
@@ -200,10 +205,10 @@ export const AnalyzePrescription: React.FC<AnalyzePrescriptionProps> = ({
     setErrorMsg(null);
 
     const steps = [
-      'EasyOCR: Extracting handwritten/printed prescription tokens...',
-      'Medicine Normalization: Mapping RxNorm & DrugBank IDs...',
-      'Interaction Engine: Querying chemical structures...',
-      'XGBoost ML Pipeline: Running risk & probability inference...'
+      'OCR: Reading the printed prescription text...',
+      'Medicine Normalization: Mapping brand names to generic drugs...',
+      'Interaction Engine: Checking every pair of medicines...',
+      'ML Models: Predicting interactions & adverse reactions...'
     ];
 
     for (let i = 0; i < steps.length; i++) {
@@ -212,59 +217,43 @@ export const AnalyzePrescription: React.FC<AnalyzePrescriptionProps> = ({
     }
 
     try {
-      let imageBase64 = filePreviewUrl || '';
-      let extractedText = extractedPdfText || '';
-
-      // 1. Send rendered Canvas image to backend OCR endpoint
-      try {
-        const ocrResult = await apiService.extractPrescriptionOCR(imageBase64, selectedFile?.name || '');
-        const serverText = ocrResult?.data?.extracted_text || '';
-        extractedText = (serverText + '\n' + extractedPdfText).trim();
-      } catch (ocrErr: any) {
-        console.warn('Backend EasyOCR engine notice:', ocrErr);
-        extractedText = extractedPdfText || '';
+      // 1. Text: digital PDFs use their text layer; images are read by Tesseract OCR on the server
+      let parsedData = extractedPdfText ? parsePrescriptionOCR(extractedPdfText) : null;
+      if (!parsedData || parsedData.medicines.length === 0) {
+        const ocrResult = await apiService.extractPrescriptionOCR(filePreviewUrl || '', selectedFile?.name || '');
+        parsedData = ocrResult?.data?.parsed || parsePrescriptionOCR(ocrResult?.data?.extracted_text || '');
       }
-
-      // 2. Smart Prescription Parsing (Demographics & Real Medicines)
-      const parsedData = parsePrescriptionOCR(extractedText);
-      let extractedMeds = parsedData.medicines;
-      if (!extractedMeds || extractedMeds.length === 0) {
+      const extractedMeds = (parsedData?.medicines || []).map((m) => ({
+        id: m.id, name: m.name, dosage: m.dosage, frequency: m.frequency, route: m.route
+      }));
+      if (extractedMeds.length === 0) {
         setErrorMsg('No medication names could be automatically recognized from this image/document. Please ensure the prescription photo is clear and well-lit, or use Manual Entry.');
         setIsAnalyzing(false);
         return;
       }
 
-      const currentUser = auth.currentUser;
-      const dynamicPatientName = parsedData.patientName 
-        ? parsedData.patientName 
-        : (currentUser?.displayName && currentUser.displayName.trim() !== '')
-        ? currentUser.displayName
-        : (clinician.name && clinician.name !== 'Guest User')
-        ? clinician.name
-        : 'Patient Record';
+      // 2. Patient details are taken only from the prescription itself
+      const patientName = parsedData!.patientName || 'Not mentioned in prescription';
+      const patientAge = parsedData!.patientAge || 0;
+      const patientGender = parsedData!.patientGender || 'Not mentioned';
 
-      const dynamicAge = parsedData.patientAge || clinician.patientAge || 31;
-      const dynamicGender = parsedData.patientGender || 'Female';
-
-      // 3. Send parsed drugs to FastAPI XGBoost / DDI ML Pipeline
+      // 3. ML pipeline (interaction + adverse reaction models)
       const mlResponse = await apiService.predictInteraction(
-        { age: dynamicAge, gender: dynamicGender, egfr: 58.0 },
+        { age: patientAge || null, gender: patientGender, egfr: null },
         extractedMeds,
         clinician.id
       );
 
-      // 4. Map real ML response to UI state
       if (mlResponse.success) {
         const resultData: AnalysisResult = {
+          ...mlResponse.data,
           id: mlResponse.data?.id || `ANALYSIS-${Date.now().toString().slice(-4)}`,
           timestamp: new Date().toLocaleString(),
           patientId: 'PAT-OCR',
-          patientName: dynamicPatientName,
-          patientAge: dynamicAge,
-          patientGender: dynamicGender,
-          status: 'Completed',
-          ...mlResponse.data,
-          detectedMedicines: extractedMeds.length > 0 ? extractedMeds : mlResponse.data.detectedMedicines
+          patientName,
+          patientAge,
+          patientGender,
+          status: 'Completed'
         };
         const enriched = enrichAnalysisWithDetails(resultData);
         syncAnalysisToFirestore(clinician.id, enriched);

@@ -27,3 +27,8 @@ Thumbs.db
 
 # Firebase Credentials (CRITICAL - DO NOT UPLOAD)
 firebase-credentials.json
+
+# Local ML working files
+ml/cache/
+ml/logs/
+backend/firebase-credentials.json

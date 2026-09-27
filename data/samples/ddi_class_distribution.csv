@@ -1,0 +1,87 @@
+model_class,pairs,percent,description
+25,60742,31.658,The risk or severity of adverse effects can be increased when #Drug1 is combined with #Drug2.
+5,34339,17.897,The metabolism of #Drug2 can be decreased when combined with #Drug1.
+9,23772,12.39,The serum concentration of #Drug2 can be increased when it is combined with #Drug1.
+8,9470,4.936,The serum concentration of #Drug2 can be decreased when it is combined with #Drug1.
+66,8397,4.376,#Drug1 may increase the hypotensive activities of #Drug2.
+12,7788,4.059,The therapeutic efficacy of #Drug2 can be decreased when used in combination with #Drug1.
+75,6140,3.2,#Drug1 may increase the QTc-prolonging activities of #Drug2.
+53,5413,2.821,#Drug1 may increase the central nervous system depressant (CNS depressant) activities of #Drug2.
+6,5011,2.612,The metabolism of #Drug2 can be increased when combined with #Drug1.
+45,3160,1.647,#Drug1 may increase the anticoagulant activities of #Drug2.
+34,3089,1.61,#Drug1 may decrease the antihypertensive activities of #Drug2.
+63,2109,1.099,#Drug1 may increase the hypoglycemic activities of #Drug2.
+14,1825,0.951,#Drug1 may decrease the excretion rate of #Drug2 which could result in a higher serum level.
+51,1277,0.666,#Drug1 may increase the bradycardic activities of #Drug2.
+64,1204,0.628,#Drug1 may increase the hypokalemic activities of #Drug2.
+0,1055,0.55,#Drug1 can cause a decrease in the absorption of #Drug2 resulting in a reduced serum concentration and potentially a decrease in efficacy.
+16,1028,0.536,#Drug1 may decrease the cardiotoxic activities of #Drug2.
+77,1011,0.527,#Drug1 may increase the sedative activities of #Drug2.
+71,936,0.488,#Drug1 may increase the neuroexcitatory activities of #Drug2.
+78,803,0.419,#Drug1 may increase the serotonergic activities of #Drug2.
+50,716,0.373,#Drug1 may increase the atrioventricular blocking (AV block) activities of #Drug2.
+61,673,0.351,#Drug1 may increase the hypertensive activities of #Drug2.
+20,663,0.346,#Drug1 may increase the nephrotoxic activities of #Drug2.
+46,629,0.328,#Drug1 may increase the antihypertensive activities of #Drug2.
+73,616,0.321,#Drug1 may increase the orthostatic hypotensive activities of #Drug2.
+39,558,0.291,#Drug1 may decrease the sedative activities of #Drug2.
+10,538,0.28,The serum concentration of the active metabolites of #Drug2 can be increased when #Drug2 is used in combination with #Drug1.
+3,519,0.27,The bioavailability of #Drug2 can be decreased when combined with #Drug1.
+40,498,0.26,#Drug1 may decrease the stimulatory activities of #Drug2.
+31,441,0.23,The risk or severity of QTc prolongation can be increased when #Drug1 is combined with #Drug2.
+72,428,0.223,#Drug1 may increase the neuromuscular blocking activities of #Drug2.
+57,422,0.22,#Drug1 may increase the fluid retaining activities of #Drug2.
+80,372,0.194,#Drug1 may increase the tachycardic activities of #Drug2.
+36,361,0.188,#Drug1 may decrease the bronchodilatory activities of #Drug2.
+49,355,0.185,#Drug1 may increase the arrhythmogenic activities of #Drug2.
+47,336,0.175,#Drug1 may increase the antiplatelet activities of #Drug2.
+37,324,0.169,#Drug1 may decrease the diuretic activities of #Drug2.
+44,323,0.168,#Drug1 may increase the anticholinergic activities of #Drug2.
+11,313,0.163,The serum concentration of the active metabolites of #Drug2 can be reduced when #Drug2 is used in combination with #Drug1 resulting in a loss in efficacy.
+68,309,0.161,#Drug1 may increase the immunosuppressive activities of #Drug2.
+41,309,0.161,#Drug1 may decrease the vasoconstricting activities of #Drug2.
+76,300,0.156,#Drug1 may increase the respiratory depressant activities of #Drug2.
+43,280,0.146,#Drug1 may increase the analgesic activities of #Drug2.
+60,278,0.145,#Drug1 may increase the hyperkalemic activities of #Drug2.
+13,244,0.127,The therapeutic efficacy of #Drug2 can be increased when used in combination with #Drug1.
+33,238,0.124,#Drug1 may decrease the anticoagulant activities of #Drug2.
+17,199,0.104,#Drug1 may increase the cardiotoxic activities of #Drug2.
+62,180,0.094,#Drug1 may increase the hypocalcemic activities of #Drug2.
+55,148,0.077,#Drug1 may increase the constipating activities of #Drug2.
+26,128,0.067,The risk or severity of bleeding can be increased when #Drug1 is combined with #Drug2.
+65,118,0.061,#Drug1 may increase the hyponatremic activities of #Drug2.
+83,109,0.057,#Drug1 may increase the vasoconstricting activities of #Drug2.
+81,108,0.056,#Drug1 may increase the thrombogenic activities of #Drug2.
+48,94,0.049,#Drug1 may increase the antipsychotic activities of #Drug2.
+42,94,0.049,#Drug1 may increase the adverse neuromuscular activities of #Drug2.
+38,83,0.043,#Drug1 may decrease the neuromuscular blocking activities of #Drug2.
+58,83,0.043,#Drug1 may increase the hypercalcemic activities of #Drug2.
+1,82,0.043,#Drug1 can cause an increase in the absorption of #Drug2 resulting in an increased serum concentration and potentially a worsening of adverse effects.
+70,69,0.036,#Drug1 may increase the myopathic rhabdomyolysis activities of #Drug2.
+21,69,0.036,#Drug1 may increase the neurotoxic activities of #Drug2.
+85,65,0.034,#Drug1 may increase the vasopressor activities of #Drug2.
+19,64,0.033,#Drug1 may increase the hepatotoxic activities of #Drug2.
+79,56,0.029,#Drug1 may increase the stimulatory activities of #Drug2.
+2,45,0.023,The absorption of #Drug2 can be decreased when combined with #Drug1.
+82,43,0.022,#Drug1 may increase the ulcerogenic activities of #Drug2.
+84,33,0.017,#Drug1 may increase the vasodilatory activities of #Drug2.
+30,33,0.017,The risk or severity of hypotension can be increased when #Drug1 is combined with #Drug2.
+23,33,0.017,#Drug1 may decrease effectiveness of #Drug2 as a diagnostic agent.
+15,32,0.017,#Drug1 may increase the excretion rate of #Drug2 which could result in a lower serum level and potentially a reduction in efficacy.
+59,28,0.015,#Drug1 may increase the hyperglycemic activities of #Drug2.
+69,28,0.015,#Drug1 may increase the myelosuppressive activities of #Drug2.
+24,27,0.014,The risk of a hypersensitivity reaction to #Drug2 is increased when it is combined with #Drug1.
+54,27,0.014,#Drug1 may increase the central nervous system depressant (CNS depressant) and hypertensive activities of #Drug2.
+27,26,0.014,The risk or severity of heart failure can be increased when #Drug2 is combined with #Drug1.
+52,26,0.014,#Drug1 may increase the bronchoconstrictory activities of #Drug2.
+22,21,0.011,#Drug1 may increase the ototoxic activities of #Drug2.
+29,14,0.007,The risk or severity of hypertension can be increased when #Drug2 is combined with #Drug1.
+67,14,0.007,#Drug1 may increase the hypotensive and central nervous system depressant (CNS depressant) activities of #Drug2.
+18,13,0.007,#Drug1 may increase the central neurotoxic activities of #Drug2.
+4,11,0.006,The bioavailability of #Drug2 can be increased when combined with #Drug1.
+56,11,0.006,#Drug1 may increase the dermatologic adverse activities of #Drug2.
+7,11,0.006,The protein binding of #Drug2 can be decreased when combined with #Drug1.
+74,10,0.005,#Drug1 may increase the photosensitizing activities of #Drug2.
+32,10,0.005,#Drug1 may decrease the analgesic activities of #Drug2.
+35,7,0.004,#Drug1 may decrease the antiplatelet activities of #Drug2.
+28,6,0.003,The risk or severity of hyperkalemia can be increased when #Drug1 is combined with #Drug2.

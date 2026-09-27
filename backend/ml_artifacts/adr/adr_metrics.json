@@ -1,0 +1,77 @@
+{
+  "model": "XGBoost binary-relevance (one classifier per ADR category)",
+  "dataset": "FAERS reports (27312), random 70/15/15 split",
+  "n_train": 19120,
+  "n_validation": 4096,
+  "n_test": 4096,
+  "macro_test_roc_auc": 0.7018220759358959,
+  "macro_test_pr_auc": 0.15167701180774534,
+  "macro_test_f1": 0.1841266027767003,
+  "previous_model_macro_test_roc_auc": 0.5885928485279317,
+  "per_target": {
+    "adr_kidney": {
+      "test_roc_auc": 0.7273598470694993,
+      "test_pr_auc": 0.14326423389729248,
+      "test_f1": 0.18181818181818182,
+      "positive_rate": 0.04086115992970123,
+      "threshold": 0.11422891914844513,
+      "previous_model_test_roc_auc": 0.5682266480020361
+    },
+    "adr_bleeding": {
+      "test_roc_auc": 0.6732676825761933,
+      "test_pr_auc": 0.16047680271244982,
+      "test_f1": 0.22950819672131148,
+      "positive_rate": 0.03580843585237258,
+      "threshold": 0.08985418826341629,
+      "previous_model_test_roc_auc": 0.6013156024311515
+    },
+    "adr_hepatotoxicity": {
+      "test_roc_auc": 0.7205921575303598,
+      "test_pr_auc": 0.1397558638527802,
+      "test_f1": 0.2,
+      "positive_rate": 0.04653632103104862,
+      "threshold": 0.10530165582895279,
+      "previous_model_test_roc_auc": 0.5703986097827112
+    },
+    "adr_arrhythmia": {
+      "test_roc_auc": 0.6589702202202203,
+      "test_pr_auc": 0.06908213297099158,
+      "test_f1": 0.06711409395973154,
+      "positive_rate": 0.02401874633860574,
+      "threshold": 0.11880937218666077,
+      "previous_model_test_roc_auc": 0.565637616788192
+    },
+    "adr_hyperkalemia": {
+      "test_roc_auc": 0.8168352348288654,
+      "test_pr_auc": 0.0961883639258855,
+      "test_f1": 0.0975609756097561,
+      "positive_rate": 0.003844463971880492,
+      "threshold": 0.028383636847138405,
+      "previous_model_test_roc_auc": 0.6273661480029404
+    },
+    "adr_hypotension": {
+      "test_roc_auc": 0.6537568476095618,
+      "test_pr_auc": 0.041211658207834914,
+      "test_f1": 0.08290155440414508,
+      "positive_rate": 0.018270357352079672,
+      "threshold": 0.05088837817311287,
+      "previous_model_test_roc_auc": 0.546830764130615
+    },
+    "adr_gastrointestinal": {
+      "test_roc_auc": 0.6955438071602771,
+      "test_pr_auc": 0.3374656085044278,
+      "test_f1": 0.3476968796433878,
+      "positive_rate": 0.12964997070884593,
+      "threshold": 0.15769684314727783,
+      "previous_model_test_roc_auc": 0.6313627976294212
+    },
+    "adr_neurological": {
+      "test_roc_auc": 0.6682508104921898,
+      "test_pr_auc": 0.22597143039030038,
+      "test_f1": 0.2664129400570885,
+      "positive_rate": 0.09988283538371412,
+      "threshold": 0.13078902661800385,
+      "previous_model_test_roc_auc": 0.5976046014563854
+    }
+  }
+}

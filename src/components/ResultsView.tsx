@@ -161,7 +161,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             AI Clinical Safety & Risk Assessment
           </h1>
           <p className="text-xs text-slate-500 font-semibold">
-            Patient: <strong className="text-slate-800">{result.patientName}</strong> ({result.patientAge} Yrs, {result.patientGender})
+            Patient: <strong className="text-slate-800">{result.patientName}</strong> ({result.patientAge ? `${result.patientAge} Yrs` : 'Age not given'}, {result.patientGender})
           </p>
         </div>
 
@@ -240,7 +240,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           </p>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-black text-slate-900 font-poppins">
-              {((result.overallConfidenceScore || 0.96) * 100).toFixed(1)}%
+              {((result.overallConfidenceScore ?? 0) * 100).toFixed(1)}%
             </span>
             <span className="text-[9px] text-emerald-600 font-black bg-emerald-50 px-2 py-0.5 rounded-full uppercase">
               Optimal

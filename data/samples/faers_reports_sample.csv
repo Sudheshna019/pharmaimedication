@@ -1,0 +1,301 @@
+patient_age,biological_sex,drug_names,reaction_list,serious
+12.0,male,['bicillin l a'],"['injection site erythema', 'injection site pain', 'injection site swelling', 'recalled product administered']",2.0
+14.0,female,['epidiolex'],['surgery'],1.0
+39.0,male,"['cabometyx', 'nivolumab']","['anosmia', 'constipation', 'fatigue', 'hypertension', 'malignant neoplasm progression', 'nausea', 'pruritus', 'rash']",1.0
+73.0,female,"['amitriptyline', 'aricept', 'aripiprazole', 'clozapine', 'coveram', 'meperidine hydrochloride', 'morphine hydrochloride', 'morphine sulfate', 'motilium', 'oxybutynin chloride', 'pregabalin', 'temazepam', 'valproate sodium']","['c-reactive protein increased', 'delusion', 'drug hypersensitivity', 'fall', 'fatigue', 'general physical health deterioration', 'glomerular filtration rate decreased', 'haemoglobin decreased', 'hallucination', 'hypophagia', 'malaise', 'micturition urgency', 'mobility decreased', 'nausea', 'pain', 'platelet count decreased', 'restless legs syndrome', 'traumatic pain', 'white blood cell count decreased']",1.0
+16.0,female,"['azathioprine', 'budesonide', 'methotrexate', 'mycophenolate mofetil', 'prednisolone', 'rituximab']","['drug intolerance', 'hepatitis acute']",1.0
+65.0,female,"['basaglar kwikpen', 'glipizide', 'hydrochlorothiazide', 'lisinopril', 'metformin', 'rosuvastatin', 'trazodone', 'voquezna triple pak']","['abdominal discomfort', 'chest discomfort', 'dysgeusia']",2.0
+68.0,male,"['ofev', 'prednisolone']","['lung adenocarcinoma', 'post procedural complication']",1.0
+59.0,male,"['cotrimoxazole', 'unasyn', 'vancomycin']","['drug reaction with eosinophilia and systemic symptoms', 'liver injury']",1.0
+68.0,unknown,"['feno micro', 'fenofibrate', 'folic acid', 'hydrocortisone', 'inflectra', 'infliximab', 'mesalamine', 'pantoprazole sodium', 'prednisone', 'zopiclone']","['blood sodium decreased', 'condition aggravated', 'fall', 'insomnia', 'intentional product use issue', 'mobility decreased', 'off label use', 'ostomy bag placement']",1.0
+65.0,female,['teriflunomide'],['gastrointestinal disorder'],1.0
+57.0,unknown,['skyrizi'],['product storage error'],2.0
+55.0,male,"['entecavir', 'fluorouracil', 'lenvatinib', 'leucovorin calcium', 'oxaliplatin', 'sintilimab']",['pneumonia'],1.0
+78.0,male,"['amlodipine', 'carvedilol', 'glimepiride', 'ipragliflozin l proline', 'lansoprazole', 'olmesartan medoxomil', 'rosuvastatin', 'rybelsus', 'silodosin', 'vonoprazan fumarate']","['gastric haemorrhage', 'haematochezia']",1.0
+85.0,female,"['bonalon', 'evenity']",['dementia'],1.0
+58.0,female,"['human immunoglobulin g', 'methylprednisolone sodium succinate', 'thymocyte immune globulin nos']","['drug ineffective', 'fungal infection', 'off label use']",1.0
+0.0027378507871321,male,"['calcitonin', 'zoledronic acid']","['foetal exposure during pregnancy', 'neonatal hypocalcaemia']",1.0
+64.0,female,"['amlodipine', 'levothyroxine']","['acute kidney injury', 'haemodynamic instability', 'harlequin syndrome', 'hypotension', 'intentional overdose', 'ischaemia', 'leukocytosis', 'liver injury', 'metabolic acidosis', 'nodal rhythm', 'rhabdomyolysis', 'shock', 'toxicity to various agents']",1.0
+22.0,unknown,"['brivaracetam', 'clobazam', 'human immunoglobulin g', 'lacosamide', 'lamotrigine', 'levetiracetam', 'methylprednisolone', 'midazolam', 'midazolam hydrochloride', 'oxcarbazepine', 'prednisolone', 'prednisone', 'propofol']","['ataxia', 'automatism epileptic', 'disruptive mood dysregulation disorder', 'drug ineffective', 'drug level below therapeutic', 'electroencephalogram abnormal', 'generalised tonic-clonic seizure', 'intentional overdose', 'maternal exposure during pregnancy', 'mood swings', 'multiple-drug resistance', 'new onset refractory status epilepticus', 'off label use', 'overdose', 'partial seizures', 'product dose omission issue', 'seizure', 'sleep deficit', 'somnolence', 'suicide attempt']",1.0
+0.0136892539356605,female,"['cholecalciferol', 'enoxaparin', 'ferrous sulfate', 'lansoprazole', 'nifedipine', 'omvoh', 'vitamins']","['body temperature increased', 'exposure during pregnancy', 'foetal exposure during pregnancy', 'maternal drugs affecting foetus']",1.0
+78.0,unknown,"['albuterol', 'atorvastatin', 'calcium citrate magnizium with zinc and vit d3', 'citirizine', 'furosemide', 'methylprednisolone sodium succinate', 'pantoprazole', 'prednisolone', 'solu medrol', 'spiriva respimat', 'sulfasalazine', 'tiotropium bromide monohydrate', 'truxima', 'tylenol', 'vitamin d nos']","['cardiac disorder', 'hypertension', 'ill-defined disorder', 'infusion site discomfort', 'infusion site erythema', 'intentional dose omission', 'poor venous access', 'thrombosis']",1.0
+7.0,male,"['epysqli', 'sodium chloride']","['back pain', 'crying', 'discomfort', 'infection']",1.0
+27.0,unknown,['tolvaptan'],"['influenza', 'product dose omission issue']",2.0
+27.0,male,"['cocaine', 'fentanyl', 'methamphetamine', 'oxycodone', 'xanax']",['overdose'],1.0
+18.0,female,"['depo provera', 'paragard t 380a']","['complication of device insertion', 'procedural pain']",2.0
+26.0,female,"['budesonide formoterol', 'doxycycline', 'lansoprazole', 'prednisolone', 'sertraline', 'sumatriptan']","['tremor', 'vomiting']",1.0
+88.0,male,['xarelto'],"['brain oedema', 'somnolence', 'thalamus haemorrhage']",1.0
+60.0,female,"['adalimumab', 'azathioprine']","['cronkhite-canada syndrome', 'treatment failure']",1.0
+67.0,male,['fasenra'],['amnesia'],1.0
+69.0,male,"['sodium chloride', 'tislelizumab']",['myelosuppression'],1.0
+48.0,male,['ketamine hydrochloride'],"['death', 'intentional product misuse']",1.0
+70.0,female,['rinvoq'],"['joint arthroplasty', 'post procedural sepsis']",1.0
+34.0,unknown,"['citalopram', 'fluoxetine', 'zoloft']","['electric shock sensation', 'nightmare', 'psychological trauma']",1.0
+65.0,male,"['dapagliflozin', 'glimepiride']","['ketoacidosis', 'renal injury']",1.0
+21.0,male,"['fentanyl', 'oxycontin']",['overdose'],1.0
+84.0,female,['cyclophosphamide'],['diarrhoea'],1.0
+70.0,male,"['mesalamine', 'omeprazole', 'pentasa', 'vedolizumab', 'vitamin d']","['abdominal distension', 'colitis ulcerative', 'off label use']",1.0
+63.0,unknown,"['aspirin', 'calcitriol', 'hydrea', 'levothyroxine sodium', 'lipitor', 'ublituximab']","['fatigue', 'hypersomnia', 'infusion related reaction']",2.0
+64.0,unknown,['opdivo'],['product dose omission issue'],2.0
+64.0,male,"['cimzia', 'entyvio', 'imuran', 'iron', 'prednisone', 'rinvoq']","['abdominal pain lower', 'abdominal tenderness', 'arthralgia', 'crohn^s disease', 'defaecation urgency', 'diarrhoea', 'drug ineffective', 'dysphonia', 'fatigue', 'haemoglobin decreased', 'intestinal stenosis', 'large intestinal stenosis', 'malaise', 'off label use', 'restless legs syndrome', 'soft tissue inflammation', 'stress']",1.0
+60.0,male,"['amlodipine', 'buspar', 'crestor', 'definity', 'hygroton', 'lisinopril']","['hyperhidrosis', 'pruritus', 'skin reaction', 'urticaria']",2.0
+8.0,female,['doxil'],"['administration site erythema', 'administration site extravasation']",1.0
+28.0,female,"['albuterol sulfate', 'allegra allergy', 'dupixent', 'ibuprofen', 'vitamins']","['dermatitis atopic', 'discomfort', 'drug ineffective', 'impaired quality of life', 'injection site reaction', 'injection site urticaria', 'rash', 'sleep disorder due to a general medical condition']",2.0
+83.0,male,['rinvoq'],['surgery'],1.0
+73.0,male,"['avastin', 'tecentriq']",['death'],1.0
+80.0,female,"['fulvestrant', 'ibrance', 'protonix']","['blood glucose increased', 'nausea', 'pancytopenia', 'vomiting']",1.0
+32.0,male,"['farxiga', 'filspari', 'fluoxetine']","['alanine aminotransferase decreased', 'albumin urine present', 'blood potassium increased', 'haematocrit decreased', 'haemoglobin decreased', 'red blood cell count decreased']",2.0
+59.0,male,"['cyclophosphamide doxorubicin etoposide prednisone vincristine', 'isavuconazole', 'meropenem', 'vancomycin']",['death'],1.0
+8.0,female,"['carboplatin', 'etoposide', 'tecentriq']",['interstitial lung disease'],1.0
+72.0,female,['pirfenidone'],['drug ineffective'],1.0
+74.0,female,"['alprazolam', 'apixaban', 'bactrim', 'bisoprolol fumarate', 'cetirizine', 'elrexfio', 'levothyroxine', 'prednisolone', 'valacyclovir hydrochloride']","['anaemia', 'leukopenia']",1.0
+68.0,male,"['allopurinol', 'amlodipine besylate', 'aspirin', 'atorvastatin', 'atropine diphenoxylate', 'brilinta', 'clopidogrel bisulfate', 'colace', 'diazepam', 'divalproex sodium', 'flonase', 'fluticasone', 'imiquimod', 'lidocaine prilocaine', 'lisinopril', 'lorazepam', 'melatonin', 'metoprolol', 'novolin 70 30', 'nurtec odt', 'oxcarbazepine', 'ozempic', 'prilosec otc', 'promethazine', 'ranexa', 'thiamine', 'tylenol', 'tylenol pm', 'uribel', 'venclexta']","['blood test abnormal', 'cough', 'fall', 'nausea', 'productive cough', 'spinal fracture', 'vomiting']",1.0
+68.0,female,"['tobradex', 'zaltrap']","['contraindicated product administered', 'endophthalmitis', 'eye pain', 'inadequate aseptic technique in use of product', 'off label use', 'product storage error', 'vision blurred']",1.0
+14.0,male,"['cyproheptadine hydrochloride', 'xyzal']","['abnormal behaviour', 'disturbance in attention', 'flat affect', 'off label use', 'therapy cessation']",1.0
+28.0,male,['insulin lispro'],"['injection site erythema', 'injection site pain', 'wrong technique in product usage process']",2.0
+85.0,unknown,['bss'],['toxic anterior segment syndrome'],1.0
+30.0,unknown,"['clobazam', 'epidiolex', 'fenfluramine', 'lacosamide']","['diastolic dysfunction', 'tricuspid valve incompetence']",1.0
+74.0,male,"['apalutamide', 'eligard', 'tamsulosin', 'unspecified ingredient']","['angina pectoris', 'arteriogram coronary abnormal', 'asthenia', 'chest pain', 'diabetes mellitus', 'dysuria', 'hot flush', 'hypertension', 'malaise', 'night sweats', 'prostatic specific antigen abnormal', 'rash']",1.0
+65.0,female,"['dupixent', 'tymlos']","['alopecia', 'back pain', 'skin infection']",2.0
+64.0,female,['daratumumab'],['pneumonitis'],1.0
+48.0,female,['keytruda'],"['lacrimal disorder', 'skin disorder']",1.0
+68.0,female,['revlimid'],"['arthralgia', 'back pain', 'cough', 'facial pain', 'muscle spasms', 'paraesthesia', 'upper-airway cough syndrome']",2.0
+75.0,male,"['calcium', 'clobetasol', 'dupixent', 'ezetimibe', 'indapamide', 'labetalol', 'levothyroxine', 'losartan', 'methocarbamol', 'niacinamide', 'pantoprazole', 'prednisone', 'triamcinolone', 'vitamin c', 'vitamin d3', 'vitamin e']","['inappropriate schedule of product administration', 'pemphigoid']",1.0
+80.0,female,"['carboplatin', 'cyclophosphamide', 'dexamethasone', 'doxorubicin', 'epcoritamab', 'gemcitabine', 'norepinephrine bitartrate', 'prednisolone', 'remdesivir', 'rituximab', 'tocilizumab', 'valganciclovir', 'vincristine']","['covid-19', 'covid-19 pneumonia', 'cytomegalovirus infection', 'hypogammaglobulinaemia', 'off label use']",1.0
+63.0,female,['evenity'],"['cerebral infarction', 'mitral valve replacement']",1.0
+74.0,male,"['amlodipine', 'bisacodyl', 'cetirizine', 'colchicine', 'eliquis', 'prednisone', 'tildrakizumab', 'tricor']","['accident', 'rib fracture']",1.0
+60.0,unknown,"['breztri', 'ipratropium bromide', 'levalbuterol tartrate']","['device delivery system issue', 'device malfunction', 'drug dose omission by device', 'dyspnoea', 'off label use', 'product packaging quantity issue', 'wheezing']",
+68.0,unknown,"['calcium citrate cholecalciferol', 'eliquis', 'ferrous gluconate', 'fosamax', 'magnesium', 'melatonin', 'minerals vitamins', 'monjuvi', 'neurontin', 'pravastatin sodium', 'prednisone', 'prograf', 'protonix', 'rezdiffra', 'ropinirole hydrochloride', 'septra', 'tamsulosin hydrochloride', 'zithromax', 'zoloft', 'zyrtec']",['pruritus'],2.0
+59.0,male,"['acyclovir', 'cefuroxime axetil', 'ciprofloxacin', 'clarithromycin', 'fluconazole', 'ketoconazole', 'methylprednisolone', 'metronidazole', 'omeprazole', 'penicillin g', 'phenytoin', 'primidone', 'sulfamethoxazole trimethoprim']","['acute respiratory distress syndrome', 'c-reactive protein increased', 'clostridium test positive', 'coagulopathy', 'condition aggravated', 'cryptococcosis', 'drug interaction', 'encephalitis fungal', 'generalised tonic-clonic seizure', 'herpes virus infection', 'leukopenia', 'loss of consciousness', 'meningitis aseptic', 'multiple organ dysfunction syndrome', 'nosocomial infection', 'peritonitis', 'pleocytosis', 'pneumothorax', 'pseudomonas infection', 'psychomotor retardation', 'pulmonary haemorrhage', 'renal failure', 'septic shock', 'weight decreased']",1.0
+76.0,male,"['adalat cr sustained release tablet', 'cabpirin tablet', 'febuxostat', 'lasix', 'lokelma powder', 'maintate tablet', 'medro tablet', 'mizoribine', 'rosuzet tablet', 'tacrolimus']",['liver disorder'],1.0
+25.0,female,"['amikacin', 'cotrimoxazole', 'imipenem and cilastatin']","['decreased appetite', 'gastrointestinal toxicity', 'nausea', 'vomiting']",1.0
+77.0,female,"['cymbalta', 'digoxin', 'diltiazem', 'lasix', 'latanoprost', 'metoprolol', 'nuplazid', 'xarelto']",['death'],1.0
+64.0,male,['keytruda'],"['death', 'illness', 'lung carcinoma cell type unspecified recurrent', 'malignant neoplasm progression']",1.0
+65.0,female,['mavenclad'],"['atelectasis', 'blood cholesterol increased', 'bronchial wall thickening', 'lymphocyte percentage decreased', 'pleural thickening', 'pneumonia parainfluenzae viral', 'respiratory failure']",1.0
+11.0,unknown,"['mycophenolate mofetil', 'prednisolone', 'rituximab', 'tacrolimus']","['b-lymphocyte count decreased', 'diabetes mellitus inadequate control', 'therapeutic response decreased']",1.0
+71.0,female,"['cimzia', 'methotrexate', 'olumiant']",['breast cancer'],1.0
+62.0,female,"['albuterol', 'allegra', 'alvesco', 'azithromycin', 'baclofen', 'calcium', 'cesamet', 'domperidone', 'furosemide', 'gabapentin', 'metformin', 'metoclopramide', 'omnaris', 'pantoprazole', 'prednisone', 'risedronate sodium', 'simvastatin', 'symbicort', 'ventolin', 'vitamin c', 'vitamin d', 'xolair']","['asthma', 'atopy', 'blood immunoglobulin g decreased', 'blood pressure systolic increased', 'candida infection', 'chest discomfort', 'choking', 'choking sensation', 'cough', 'covid-19', 'diaphragmatic paralysis', 'diarrhoea', 'drug hypersensitivity', 'dyspnoea', 'dyspnoea paroxysmal nocturnal', 'fatigue', 'forced expiratory volume decreased', 'gastrooesophageal reflux disease', 'headache', 'hypersensitivity', 'hypogammaglobulinaemia', 'hypoventilation', 'immune system disorder', 'immunodeficiency', 'inappropriate schedule of product administration', 'influenza', 'malaise', 'mobility decreased', 'multiple sclerosis', 'multiple sclerosis relapse', 'obstructive airways disorder', 'pain', 'productive cough', 'pyrexia', 'rhinitis', 'sinusitis', 'sleep apnoea syndrome', 'therapeutic response shortened', 'weight decreased', 'wheezing']",1.0
+80.0,male,"['amlodipine', 'atenolol', 'atorvastatin', 'finasteride', 'losartan', 'metformin', 'tamsulosin hydrochloride']","['depressed mood', 'depression']",1.0
+81.0,female,"['amlodipine besylate', 'aspirin', 'atorvastatin', 'candesartan', 'denosumab', 'fulvestrant', 'letrozole', 'magnesium', 'metamizole', 'morphine hydrochloride', 'ondansetron', 'opipramol', 'palbociclib', 'pantoprazole sodium', 'polyethylene glycols', 'vitamin b complex']","['breast cancer', 'erysipelas', 'malignant neoplasm progression']",1.0
+59.0,female,"['morphine', 'venlafaxine']",['death'],1.0
+31.0,female,"['dextroamphetamine saccharate amphetamine aspartate dextroamphetamine', 'paragard t 380a']","['complication of device removal', 'device breakage', 'foreign body in reproductive tract']",1.0
+68.0,male,['vyxeos'],"['acute myeloid leukaemia', 'hepatic function abnormal', 'infection']",1.0
+76.0,male,['mycophenolate mofetil'],"['blood glucose increased', 'fungal infection', 'immunosuppression']",1.0
+76.0,female,['krazati'],"['brain fog', 'diarrhoea', 'product dispensing issue', 'product dose omission issue']",2.0
+70.0,unknown,"['bicalutamide', 'casodex', 'denosumab', 'febuxostat', 'goserelin', 'harnal', 'hemoporison', 'icosapent ethyl', 'kallidinogenase', 'metformin hydrochloride vildagliptin', 'rebamipide']",['osteonecrosis of jaw'],1.0
+61.0,female,['ibrance'],"['alopecia', 'blood glucose increased', 'off label use', 'white blood cell count decreased']",1.0
+80.0,male,['trelstar'],"['fall', 'product dose omission issue']",1.0
+57.0,female,"['atorvastatin', 'citalopram hydrochloride', 'dupixent', 'losartan potassium']","['feeling jittery', 'heart rate increased', 'injection site pain']",2.0
+43.0,male,"['clozapine', 'invega sustenna']","['agitation', 'incoherent', 'malaise', 'restlessness']",1.0
+77.0,female,"['dupixent', 'pimecrolimus']","['dry skin', 'pruritus', 'skin fissures']",2.0
+39.0,female,['paclitaxel'],"['cough', 'hypoxia']",1.0
+57.0,male,"['clonidine', 'diltiazem hydrochloride', 'duloxetine hydrochloride', 'hydralazine', 'lisinopril and hydrochlorothiazide', 'quetiapine']",['completed suicide'],1.0
+51.0,male,['baclofen'],"['haemodynamic rebound', 'hyperthermia', 'hypotension', 'muscle spasticity', 'supraventricular tachycardia', 'tachycardia', 'withdrawal syndrome']",1.0
+24.0,male,"['dupilumab', 'triamcinolone', 'triamcinolone acetonide']","['injection site swelling', 'loss of consciousness', 'ocular hyperaemia']",1.0
+50.0,male,['leuprolide acetate'],"['fall', 'femur fracture', 'ligament sprain']",1.0
+30.0,female,['dupixent'],"['condition aggravated', 'rash']",2.0
+67.0,female,"['acetaminophen', 'cetirizine', 'clonazepam', 'comirnaty tozinameran', 'diphenhydramine', 'dipyridamole', 'eltrombopag', 'human immunoglobulin g', 'levothyroxine sodium', 'methylprednisolone', 'nortriptyline', 'rituximab', 'spikevax']","['drug intolerance', 'dysphagia', 'dysphonia', 'inappropriate schedule of product administration', 'off label use', 'platelet count decreased', 'throat irritation', 'toxicity to various agents', 'urticaria']",1.0
+26.0,male,"['clozapine', 'paliperidone palmitate']","['dilated cardiomyopathy', 'myocarditis', 'myoclonus', 'status epilepticus']",1.0
+87.0,male,"['eligard', 'mesalamine', 'vedolizumab']","['colitis ulcerative', 'off label use', 'stress']",1.0
+60.0,female,['insulin glargine'],['cerebrovascular accident'],1.0
+29.0,female,['kesimpta'],"['hyperemesis gravidarum', 'maternal exposure timing unspecified']",1.0
+61.0,male,"['aripiprazole', 'aspirin', 'benadryl', 'certavite senior', 'cogentin', 'folic acid', 'hydroxyzine', 'ibuprofen', 'lorazepam', 'melatonin', 'nicotine', 'olanzapine pamoate', 'oxcarbazepine', 'precedex', 'sodium chloride', 'thiamine', 'valium', 'vitamins']","['confusional state', 'dizziness', 'dysphagia', 'post-injection delirium sedation syndrome', 'sinus tachycardia', 'vitamin b12 abnormal']",1.0
+43.0,male,"['ibuprofen', 'mounjaro', 'ozempic', 'rybelsus', 'trulicity']","['anxiety', 'blood cholesterol increased', 'blood triglycerides increased', 'depression', 'diarrhoea', 'dyspepsia', 'emotional distress', 'erectile dysfunction', 'impaired gastric emptying', 'inappropriate schedule of product administration']",1.0
+43.0,male,['sertraline'],['multiple acyl-coenzyme a dehydrogenase deficiency'],1.0
+47.0,female,"['denosumab', 'faslodex', 'ibrance', 'truqap', 'verzenio', 'xeloda']","['erythema', 'headache', 'malaise']",2.0
+88.0,female,"['alendronic acid', 'prednisolone sodium phosphate']",['osteonecrosis'],1.0
+52.0,unknown,['bafiertam'],['multiple sclerosis relapse'],1.0
+36.0,male,"['alfentanil', 'ketamine', 'propofol']","['head injury', 'intentional product misuse', 'subdural haematoma', 'superficial vein thrombosis']",1.0
+87.0,unknown,"['acetaminophen hydrocodone', 'acyclovir', 'afrin', 'allegra', 'aspirin', 'aztreonam lysine', 'b1 vitamin', 'bifidobacterium spp lactobacillus acidophilus', 'coenzyme q10', 'crestor', 'dupixent', 'ezetimibe', 'famotidine', 'fibercon', 'fish oil', 'fluticasone propionate salmeterol xinafoate', 'gamunex', 'isosorbide mononitrate', 'levalbuterol', 'metoprolol succinate', 'montelukast sodium', 'move free joint health', 'nitroglycerin', 'oxygen', 'proair hfa', 'prolia', 'protonix', 'ranolazine', 'sodium chloride', 'torsemide', 'valsartan', 'vitamin b12', 'vitamin d3', 'vitamin e', 'vitamins', 'xanax']","['cardiac disorder', 'fluid retention', 'product use in unapproved indication']",1.0
+14.0,female,"['azelastine fluticason dymista', 'bupropion', 'desloratadine', 'ethinyl estradiol levonorgestrel', 'fluoxetine', 'fluticason vilanterol relvar ellipta', 'midazolam', 'oxazepam', 'quetiapine', 'rizatriptan']",['epilepsy'],1.0
+42.0,female,"['calcitonin salmon', 'zoledronic acid']","['drug ineffective', 'maternal exposure during pregnancy', 'product use issue']",1.0
+69.0,male,"['abiraterone', 'aspirin', 'atorvastatin', 'degarelix', 'docusate sodium', 'eliquis', 'enoxaparin', 'leuprolide acetate', 'prednisone', 'zoledronic acid']",['spinal cord infarction'],1.0
+63.0,female,"['acetaminophen', 'amisulpride', 'lormetazepam']","['hepatic cytolysis', 'hypokalaemia', 'hypotension', 'long qt syndrome', 'poisoning deliberate', 'somnolence']",1.0
+39.0,male,"['acetaminophen diphenhydramine hydrochloride', 'ibuprofen']",['toxicity to various agents'],1.0
+19.0,female,['carboprost tromethamine'],"['chest discomfort', 'cough', 'headache', 'productive cough', 'sinus tachycardia', 'vomiting']",1.0
+39.0,female,"['chlorpromazine', 'haloperidol', 'lorazepam', 'trifluoperazine', 'trihexyphenidyl']",['posterior reversible encephalopathy syndrome'],1.0
+70.0,male,"['adalimumab', 'amlodipine', 'irbesartan', 'tamsulosin']","['night sweats', 'pneumonia', 'sleep disorder']",1.0
+26.0,male,['voquezna'],"['bladder pain', 'chromaturia', 'pollakiuria', 'urinary tract infection', 'urine abnormality']",2.0
+60.0,female,"['carbimazole', 'dalfampridine', 'ocrevus', 'rosuvastatin']","['fibula fracture', 'migraine', 'mobility decreased']",1.0
+3.0,male,"['epidiolex', 'vigabatrin']","['death', 'off label use']",1.0
+55.0,unknown,"['ertapenem sodium', 'inflectra', 'infliximab', 'invanz', 'prednisone', 'xarelto']","['arthralgia', 'back pain', 'c-reactive protein increased', 'fall', 'renal failure']",1.0
+36.0,male,"['clozapine', 'haloperidol decanoate', 'valproic acid']","['hallucination, auditory', 'self-destructive behaviour', 'upper limb fracture']",1.0
+56.0,male,"['albuterol', 'budesonide formoterol', 'fluoxetine', 'gabapentin', 'oxygen']","['inappropriate schedule of product administration', 'serotonin syndrome']",1.0
+53.0,female,"['clozapine', 'glycopyrronium indacaterol', 'pipamperone']","['concomitant drug effect decreased', 'drug interaction', 'lung disorder', 'mental impairment']",1.0
+28.0,female,"['dupixent', 'phentermine hydrochloride']","['injection site dryness', 'injection site eczema', 'injection site exfoliation', 'injection site pain', 'injection site swelling']",2.0
+73.0,unknown,['brukinsa'],['cerebrovascular accident'],1.0
+54.0,female,"['diltiazem hydrochloride', 'triazolam']",['suspected suicide'],1.0
+70.0,female,['imodium multi symptom relief'],['incorrect dose administered'],2.0
+73.0,male,['triptorelin pamoate'],['death'],1.0
+89.0,female,['enhertu'],"['haematotoxicity', 'incarcerated hernia', 'therapy interrupted', 'therapy partial responder']",1.0
+48.0,unknown,['metformin hydrochloride'],"['dysuria', 'myotonia', 'taste disorder']",1.0
+91.0,female,"['acetaminophen and diphenhydramine hydrochloride', 'hydrochlorothiazide', 'lisinopril']",['completed suicide'],1.0
+76.0,male,"['acetaminophen and codeine', 'apixaban', 'budesonide', 'diltiazem', 'hydromorphone', 'prednisone', 'pregabalin', 'rabeprazole', 'ramipril', 'vedolizumab']","['blood iron decreased', 'serum ferritin decreased', 'small intestinal haemorrhage']",1.0
+77.0,unknown,['doxazosin'],"['atrial fibrillation', 'medication error']",1.0
+15.0,female,"['escitalopram', 'lithium carbonate', 'lorazepam', 'olanzapine', 'tandospirone']","['condition aggravated', 'off label use', 'periodic limb movement disorder']",1.0
+63.0,female,['dexamethasone'],['adrenocortical insufficiency acute'],1.0
+58.0,male,['quetiapine'],['suicidal ideation'],1.0
+67.0,male,"['camrelizumab', 'capecitabine']",['pruritus'],2.0
+79.0,female,['vedolizumab'],['jc polyomavirus test positive'],2.0
+88.0,female,"['digoxin', 'furosemide', 'torsemide', 'tramadol', 'venclexta']","['atrial fibrillation', 'fall', 'pelvic fracture', 'road traffic accident']",1.0
+47.0,male,['dupixent'],['off label use'],2.0
+30.0,female,"['brigatinib', 'mirtazapine']","['accidental overdose', 'anxiety', 'decreased appetite', 'dehydration', 'dry skin', 'gastritis', 'gastrooesophageal reflux disease', 'illness', 'infusion site pain', 'iron deficiency', 'metastases to lung', 'migraine', 'nausea', 'neoplasm', 'off label use', 'ovarian cyst ruptured', 'pain', 'product dose omission issue', 'product use issue', 'vomiting', 'weight decreased']",1.0
+73.0,male,"['acetaminophen codeine phosphate', 'alfuzosin', 'carboplatin', 'desloratadine', 'dexamethasone', 'etoricoxib', 'mebeverine', 'ondansetron', 'paclitaxel']","['cardiotoxicity', 'drug interaction', 'gastrointestinal toxicity']",1.0
+26.0,unknown,"['metoprolol succinate', 'nifedipine']","['accidental overdose', 'toxicity to various agents']",1.0
+79.0,male,"['amlodipine besylate', 'dupixent']",['rash'],2.0
+69.0,male,['cyclosporine'],['acute kidney injury'],1.0
+8.0,female,"['carboplatin', 'gemcitabine', 'keytruda']","['biliary obstruction', 'hepatic function abnormal']",1.0
+38.0,male,"['atomoxetine', 'butylscopolamine bromide', 'fluoxetine', 'lansoprazole', 'propranolol']","['delusion', 'hallucination', 'intrusive thoughts', 'psychotic disorder']",1.0
+70.0,female,"['isoniazid', 'pantoprazole', 'polyethylene glycol 3350', 'prednisone', 'reactine', 'synthroid', 'vedolizumab']","['cataract', 'retinal vein occlusion']",1.0
+75.0,female,"['clopidogrel bisulfate', 'galantamine hydrobromide', 'kisunla']",['urticaria'],1.0
+78.0,female,['ezetimibe'],['cough'],1.0
+82.0,male,"['ezetimibe', 'rosuvastatin']",['eye pain'],2.0
+28.0,female,['infliximab'],"['fat necrosis', 'pericardial disease', 'proctitis ulcerative']",1.0
+76.0,female,"['astepro', 'fluticasone propionate and salmeterol']","['cough', 'product dose omission issue']",2.0
+89.0,male,"['apixaban', 'bisoprolol', 'doxorubicin hydrochloride', 'midodrine', 'nifedipine', 'piperacillin and tazobactam', 'prednisone', 'rituximab', 'synthroid', 'tamsulosin', 'vincristine sulfate']","['bacterial infection', 'urosepsis']",1.0
+10.0,male,"['azacitidine', 'venetoclax']","['dental caries', 'ecchymosis', 'infection', 'mouth haemorrhage', 'myelosuppression', 'neutropenia', 'petechiae', 'platelet count decreased', 'pyrexia', 'red blood cell count decreased', 'skin haemorrhage', 'white blood cell count decreased']",1.0
+58.0,female,"['farxiga', 'pantoprazole', 'voquezna']","['abdominal pain upper', 'gastrointestinal disorder']",2.0
+71.0,female,"['carbidopa levodopa', 'onapgo']","['drug ineffective', 'infusion site erythema', 'infusion site nodule', 'infusion site pruritus', 'injection site haemorrhage']",2.0
+66.0,female,['corticotropin'],"['condition aggravated', 'fatigue', 'injection site bruising', 'injection site haemorrhage', 'insomnia', 'ocular sarcoidosis', 'weight increased']",1.0
+80.0,male,"['albuterol', 'ascorbic acid', 'aspirin', 'empagliflozin', 'felodipine', 'fluticasone furoate umeclidinium bromide vilanterol trifenatate', 'gliclazide', 'linagliptin', 'metformin', 'nitroglycerin', 'pantoprazole', 'prednisolone', 'ramipril', 'simvastatin']","['anaemia', 'small intestinal haemorrhage', 'syncope']",1.0
+32.0,male,['clozapine'],"['lymphocyte count increased', 'neutropenia', 'red blood cell count decreased', 'white blood cell count decreased']",1.0
+0.9166666666666666,male,['gabapentin'],['toxic epidermal necrolysis'],1.0
+70.0,male,"['capecitabine', 'keytruda', 'oxaliplatin', 'trastuzumab']","['immune-mediated hepatic disorder', 'therapy partial responder']",1.0
+78.0,male,['ciprofloxacin'],['immune thrombocytopenia'],1.0
+64.0,female,['teriparatide'],"['injection site pain', 'injection site pruritus', 'injection site urticaria']",2.0
+15.0,male,"['aripiprazole', 'oxazepam', 'topiramate', 'trihexyphenidyl']","['off label use', 'treatment failure']",2.0
+51.0,female,"['acetaminophen', 'buprenorphine', 'pregabalin', 'ropivacaine']","['leukopenia', 'normocytic anaemia']",1.0
+90.0,female,"['diltiazem', 'metoprolol']",['medication error'],1.0
+79.0,female,"['aspirin', 'fexofenadine hydrochloride', 'loratadine', 'omeprazole', 'simvastatin']",['eye swelling'],1.0
+25.0,female,"['lansoprazole', 'lithium carbonate', 'metformin', 'methylphenidate', 'mirtazapine', 'wegovy']","['inhibitory drug interaction', 'insomnia']",1.0
+16.0,male,['omnitrope'],"['arthralgia', 'device breakage', 'incorrect dose administered by device', 'injection site discharge', 'wrong technique in device usage process']",2.0
+83.0,male,"['aspirin', 'atorvastatin', 'bisoprolol', 'ramipril']","['fall', 'myopathy toxic']",1.0
+76.0,female,"['aspirin', 'bismuth subsalicylate', 'calcium', 'coq10 excel', 'melatonin', 'tymlos', 'vitamin b12', 'vitamin c', 'zinc']","['hypersensitivity', 'pruritus', 'urticaria']",2.0
+52.0,male,"['abilify', 'amitiza', 'dimethicone', 'dutasteride', 'elobixibat', 'eszopiclone', 'intuniv', 'lansoprazole', 'miya bm', 'movicol', 'quazepam', 'quviviq', 'sennosides', 'silodosin od', 'sodium ferrous citrate']",['hepatic function abnormal'],1.0
+54.0,female,['femara'],"['acute kidney injury', 'chronic kidney disease', 'renal atrophy']",1.0
+48.0,unknown,"['metoprolol', 'tiotropium bromide']","['device delivery system issue', 'device malfunction', 'device mechanical issue', 'drug dose omission by device', 'wheezing', 'wrong technique in product usage process']",2.0
+64.0,female,"['apixaban', 'felodipine', 'indapamide', 'lormetazepam', 'loxapine', 'metformin', 'metformin hydrochloride sitagliptin', 'metoprolol', 'perindopril', 'rosuvastatin', 'sitagliptin phosphate', 'trihexyphenidyl hydrochloride', 'valpromide']","['coma', 'intentional overdose']",1.0
+80.0,male,"['keytruda', 'padcev']","['immune-mediated myocarditis', 'immune-mediated myositis', 'troponin increased']",1.0
+51.0,male,['extraneal'],"['abdominal pain', 'dizziness', 'dyspnoea', 'fatigue', 'off label use', 'peritoneal cloudy effluent', 'peritoneal dialysis complication', 'peritonitis', 'renal cyst', 'respiration abnormal']",1.0
+76.0,male,['rivaroxaban'],"['epistaxis', 'haematoma', 'iron deficiency anaemia']",1.0
+38.0,female,"['baclofen', 'fingolimod hydrochloride']","['dizziness', 'ear infection', 'fatigue', 'headache', 'laryngospasm', 'malaise', 'nausea', 'neck pain', 'respiratory muscle weakness', 'socioeconomic precarity', 'somnolence', 'tinnitus']",1.0
+61.0,female,"['cisplatin', 'durvalumab', 'gemcitabine hydrochloride']","['lactic acidosis', 'leukocytosis', 'posterior reversible encephalopathy syndrome', 'potentiating drug interaction']",1.0
+67.0,male,"['azacitidine', 'sterile water', 'venclexta']",['myelosuppression'],1.0
+82.0,male,['vedolizumab'],['cerebrovascular accident'],1.0
+90.0,male,['brexpiprazole'],"['death', 'off label use']",1.0
+59.0,female,"['albuterol sulfate', 'dupixent', 'estradiol', 'gabapentin', 'losartan and hydrochlorothiazide', 'metformin', 'montelukast', 'spiriva respimat', 'theophylline', 'zolpidem']",['sinus disorder'],2.0
+44.0,female,"['cyclosporine', 'mycophenolate mofetil', 'prednisolone']","['atelectasis', 'bile duct stenosis', 'cholangitis infective', 'chronic kidney disease', 'dilatation intrahepatic duct acquired', 'raoultella ornithinolytica infection']",1.0
+74.0,male,['lomotil'],['chronic myeloid leukaemia'],1.0
+52.0,male,"['carbamazepine', 'gabapentin', 'lacosamide', 'tramadol']","['drug ineffective', 'off label use', 'therapy partial responder']",1.0
+82.0,male,['creon'],['pancreatic carcinoma recurrent'],1.0
+4.0,male,['humate p'],"['genitourinary operation', 'treatment delayed']",1.0
+51.0,female,['qinlock'],"['alopecia', 'blood magnesium decreased', 'blood potassium decreased', 'dehydration', 'malaise', 'paraesthesia', 'product dose omission issue', 'vomiting']",1.0
+24.0,female,"['kineret', 'prednisone']","['eosinophilia', 'pruritus', 'rash maculo-papular']",1.0
+25.0,male,['vedolizumab'],"['colitis ulcerative', 'ear infection', 'product dose omission issue']",1.0
+0.0,female,"['clobazam', 'diacomit', 'keppra']","['influenza', 'off label use', 'product preparation issue', 'seizure']",1.0
+65.0,male,"['alirocumab', 'aspirin', 'clopidogrel', 'ezetimibe', 'pitavastatin calcium', 'rosuvastatin']",['drug ineffective'],2.0
+53.0,male,"['prednisone', 'vedolizumab']",['crohn^s disease'],1.0
+31.0,female,['rinvoq'],"['covid-19', 'haematochezia', 'post procedural haemorrhage']",1.0
+17.0,female,"['acetylcysteine', 'acupan', 'dextromethorphan hydrobromide', 'drospirenone', 'etifoxine', 'ketoprofen', 'levofloxacin', 'maxilase', 'prednisolone', 'pristinamycin', 'spasfon', 'tramadol']","['fibromyalgia', 'oedema peripheral', 'peripheral sensory neuropathy', 'potentiating drug interaction', 'tachycardia']",1.0
+81.0,female,"['pomalidomide', 'talquetamab']","['anaemia', 'colon cancer', 'fall']",1.0
+34.0,male,"['cisplatin', 'gemcitabine hydrochloride', 'sodium chloride', 'tislelizumab']",['myelosuppression'],1.0
+53.0,male,['xywav'],['surgery'],1.0
+58.0,female,"['acetaminophen', 'alcohol']",['toxicity to various agents'],1.0
+38.0,female,"['acetaminophen', 'fluoxetine', 'folic acid', 'ibuprofen', 'methotrexate', 'piroxicam']","['agranulocytosis', 'drug interaction']",1.0
+48.0,female,['enoxaparin sodium'],"['chest discomfort', 'dyspnoea', 'hypoxia', 'pulmonary embolism']",1.0
+31.0,male,['remodulin'],"['haemoptysis', 'infusion site pain', 'pneumonia', 'respiratory tract congestion']",1.0
+14.0,male,"['aminocaproic acid', 'hemlibra', 'kovaltry']",['epistaxis'],1.0
+83.0,unknown,"['alfuzosin', 'amiodarone', 'furosemide', 'levetiracetam', 'lovenox', 'melatonin']",['neutropenia'],1.0
+61.0,female,"['losartan', 'pregabalin']","['abdominal pain', 'pancreatitis acute', 'vomiting']",1.0
+75.0,male,"['dorzolamide hydrochloride', 'istalol', 'latanoprost', 'timolol maleate']","['eye pain', 'eye pruritus', 'intraocular pressure increased', 'loss of personal independence in daily activities', 'product physical issue', 'product residue present', 'vision blurred']",2.0
+55.0,unknown,"['exemestane', 'goserelin acetate', 'palbociclib', 'zoladex']","['malignant neoplasm progression', 'pericardial effusion', 'pleural effusion']",1.0
+35.0,unknown,['sertraline hydrochloride'],"['no adverse event', 'recalled product administered']",2.0
+67.0,male,"['amlodipine', 'atenolol', 'diclofenac', 'dupixent', 'ergocalciferol', 'escitalopram', 'ferrous sulfate', 'finasteride', 'fluticasone propionate', 'furosemide', 'gabapentin', 'guaifenesin mucinex', 'hydrocodone', 'iron dextran', 'omeprazole', 'pravastatin', 'ropinirole', 'terazosin', 'trelegy ellipta']","['arthralgia', 'neuralgia', 'pruritus']",2.0
+74.0,female,"['acetaminophen', 'cannabis sativa subsp indica top', 'citalopram', 'diltiazem', 'docusate sodium', 'fluticasone', 'gabapentin', 'levothyroxine', 'methocarbamol', 'metoprolol', 'nebivolol', 'polyethylene glycol', 'procrit', 'ramelteon', 'senna and docusate sodium', 'tizanidine', 'toradol', 'tramadol', 'vitamin b12']","['anaemia', 'atrial fibrillation', 'chills', 'colostomy closure', 'diarrhoea', 'nausea', 'pyrexia', 'upper gastrointestinal haemorrhage', 'vomiting']",1.0
+54.0,female,['paragard t 380a'],"['abnormal uterine bleeding', 'complication of device removal', 'device breakage', 'device material issue', 'device use issue', 'foreign body in reproductive tract', 'off label use']",1.0
+52.0,female,"['cabotegravir', 'rilpivirine']",['urticaria'],1.0
+40.0,female,['docetaxel'],"['drug-induced liver injury', 'hepatic encephalopathy', 'hepatic failure']",1.0
+66.0,male,"['elotuzumab', 'eltrombopag', 'pomalidomide']",['acute myeloid leukaemia'],1.0
+75.0,male,"['acetaminophen', 'acyclovir', 'amoxicillin', 'aspirin', 'bactrim ds', 'compazine', 'darzalex', 'dexamethasone', 'kyprolis', 'lantus', 'lovastatin', 'metformin', 'paroxetine', 'pomalyst', 'trulicity', 'vitamin b12']",['platelet count decreased'],2.0
+43.0,female,['wegovy'],"['blood creatinine increased', 'blood glucose increased', 'product use issue', 'sympathomimetic effect']",1.0
+66.0,male,"['aspirin', 'pseudoephedrine', 'tymlos']","['arthralgia', 'off label use']",2.0
+50.0,female,"['advair hfa', 'apixaban', 'cortiment', 'ethinyl estradiol norethindrone acetate', 'pinaverium bromide', 'rabeprazole sodium', 'rescue', 'vedolizumab']",['thrombosis'],1.0
+29.0,male,"['invega sustenna', 'olanzapine']","['delusion', 'insomnia', 'malaise', 'negative thoughts', 'restlessness']",1.0
+78.0,female,"['acyclovir', 'anoro ellipta', 'aspirin', 'calcium carbonate cholecalciferol', 'chlorthalidone', 'dandelion root', 'dexamethasone', 'klor con 25', 'menaquinone 6', 'pravastatin', 'proventil', 'revlimid', 'stiolto respimat', 'vitamin b complex', 'vitamin b12', 'vitamin d3', 'vitamins', 'xarelto']","['dizziness', 'malaise', 'vision blurred']",2.0
+27.0,female,"['hydroxychloroquine', 'ketorolac', 'methylprednisolone', 'mycophenolate mofetil', 'prednisone']","['off label use', 'posterior reversible encephalopathy syndrome']",1.0
+72.0,male,"['basaglar', 'ozempic', 'tresiba', 'trulicity']","['blindness', 'glycosylated haemoglobin increased', 'product storage error', 'thrombosis']",1.0
+13.0,female,"['acetaminophen', 'adapalene benzoyl peroxide', 'ciprofloxacin', 'drospirenone', 'ferrous fumarate', 'ibuprofen', 'norethindrone', 'norethindrone acetate', 'rapamune', 'septra', 'sirolimus', 'slynd', 'sulfamethoxazole trimethoprim', 'tranexamin', 'zinc oxide']","['acne', 'alanine aminotransferase increased', 'anaemia', 'aspartate aminotransferase increased', 'bacteraemia', 'blood alkaline phosphatase decreased', 'blood bilirubin decreased', 'blood cholesterol increased', 'blood creatinine decreased', 'cellulitis', 'dizziness', 'dyspnoea', 'fibrin d dimer increased', 'gamma-glutamyltransferase increased', 'headache', 'high density lipoprotein decreased', 'low density lipoprotein increased', 'lymphadenitis', 'lymphatic malformation', 'lymphoedema', 'nausea', 'non-high-density lipoprotein cholesterol increased', 'off label use', 'physical disability', 'pik3ca related overgrowth spectrum', 'pulse abnormal', 'pyrexia', 'renal dysplasia', 'sepsis', 'skin infection', 'social anxiety disorder', 'stomatitis', 'subcutaneous abscess', 'transferrin decreased', 'vomiting', 'weight abnormal']",1.0
+41.0,male,"['omega 3 ester', 'rosuvastatin']",['drug intolerance'],2.0
+63.0,female,['zarxio'],['malaise'],1.0
+71.0,female,['insulin aspart'],['ulcerative keratitis'],1.0
+66.0,male,"['bortezomib', 'dexamethasone', 'lenalidomide']","['diarrhoea', 'guillain-barre syndrome']",1.0
+64.0,male,"['axicabtagene ciloleucel', 'cyclophosphamide', 'doxorubicin', 'ibrutinib', 'obinutuzumab', 'polatuzumab vedotin', 'prednisone', 'revlimid', 'rituximab', 'venetoclax', 'vincristine', 'voriconazole']","['ascites', 'covid-19', 'oral infection', 'sepsis']",1.0
+67.0,male,"['humira', 'movicol']","['abdominal pain', 'adenocarcinoma of colon', 'stenosis', 'ulcer']",1.0
+44.0,female,"['atropine diphenoxylate', 'azathioprine', 'bismuth subsalicylate', 'budesonide', 'cholestyramine', 'colesevelam', 'loperamide', 'mesalamine', 'octreotide', 'prednisone', 'rifaximin']","['drug ineffective', 'product prescribing issue']",1.0
+71.0,unknown,['yescarta'],"['anaemia', 'anxiety', 'cytokine release syndrome', 'febrile bone marrow aplasia', 'neurotoxicity', 'neutropenia', 'thrombocytopenia']",1.0
+15.0,male,"['calaspargase pegol', 'cytarabine', 'daunorubicin', 'methotrexate', 'prednisolone', 'vincristine sulfate']",['sepsis'],1.0
+74.0,male,"['bactrim', 'venlafaxine']",['hypoglycaemia'],1.0
+15.0,female,"['acetaminophen', 'efferalgan', 'ferrous sulfate', 'phloroglucinol 1 3 5 trimethoxybenzene']","['intentional overdose', 'poisoning deliberate']",1.0
+80.0,male,"['imdelltra', 'warfarin']","['immune effector cell-associated neurotoxicity syndrome', 'off label use']",1.0
+47.0,female,"['alendronate sodium', 'enalapril maleate', 'fosamax', 'losartan']","['abdominal discomfort', 'abdominal pain upper', 'arthralgia', 'cardiac failure', 'cardiac failure congestive', 'contraindicated product administered', 'cough', 'diarrhoea', 'drug hypersensitivity', 'drug ineffective', 'drug intolerance', 'dyspnoea', 'gastrointestinal disorder', 'headache', 'hepatic enzyme increased', 'hepatic steatosis', 'hypersensitivity', 'hypertension', 'liver disorder', 'loss of employment', 'malaise', 'nausea', 'pain', 'rash', 'therapeutic product effect decreased']",1.0
+69.0,female,"['kisqali', 'letrozole']","['alopecia', 'arthralgia', 'bone pain', 'bronchitis', 'disease recurrence', 'dry mouth', 'dyspnoea', 'fluid retention', 'joint stiffness', 'metastases to bone', 'metastases to lung', 'musculoskeletal stiffness', 'neoplasm malignant', 'osteoporosis', 'peripheral swelling', 'pollakiuria', 'product blister packaging issue', 'rhinorrhoea', 'speech disorder', 'taste disorder', 'tongue dry', 'vision blurred', 'weight decreased']",1.0
+49.0,female,['ocrevus'],['injection site pain'],2.0
+53.0,female,"['atropine', 'bevacizumab', 'dexamethasone', 'fluorouracil', 'irinotecan hydrochloride', 'loperamide', 'metoclopramide', 'ondansetron']","['decreased appetite', 'fistula', 'procedural pain']",1.0
+6.0,male,['saizen'],"['autism spectrum disorder', 'coeliac disease', 'dark circles under eyes', 'diarrhoea infectious', 'renal failure', 'swelling']",1.0
+31.0,female,"['haloperidol', 'olanzapine']","['exposure during pregnancy', 'gestational diabetes']",1.0
+64.0,male,"['mycophenolic acid', 'tacrolimus']","['bile duct stenosis', 'hepatic enzyme increased', 'post procedural complication']",1.0
+65.0,female,"['bendamustine', 'bortezomib', 'daratumumab', 'ixazomib citrate', 'lenalidomide', 'pomalidomide']","['cataract', 'covid-19', 'disease progression', 'disease recurrence', 'drug ineffective', 'lung disorder', 'pericarditis', 'primary biliary cholangitis']",1.0
+75.0,male,"['carboplatin', 'nivolumab', 'osimertinib', 'paclitaxel']","['malignant neoplasm progression', 'therapeutic product effect variable']",1.0
+39.0,female,['metronidazole'],"['abdominal pain upper', 'dry eye', 'fatigue', 'pain in jaw']",1.0
+17.0,male,"['albuterol', 'diphenhydramine', 'hydrocortisone', 'immunoglobulin', 'methylprednisolone', 'rituximab']","['drug ineffective', 'product prescribing issue']",1.0
+51.0,female,"['amlodipine', 'cyclobenzaprine', 'duloxetine', 'gabapentin', 'hydroxychloroquine', 'lantus solostar', 'lisinopril', 'meloxicam', 'methocarbamol', 'oxycodone', 'ozempic', 'pantoprazole', 'prednisone', 'sildenafil', 'synthroid', 'victoza']","['impaired gastric emptying', 'nausea', 'off label use']",1.0
+59.0,female,"['albuterol', 'amlodipine besylate', 'budesonide', 'formoterol fumarate', 'hydrochlorothiazide', 'januvia', 'omnaris', 'pantoprazole', 'spiriva', 'tiotropium bromide', 'trazodone', 'venlafaxine hydrochloride']","['asthma', 'dyspnoea', 'full blood count abnormal', 'loss of personal independence in daily activities', 'lung diffusion test abnormal', 'obstructive airways disorder', 'sleep disorder due to a general medical condition', 'wheezing']",1.0
+31.0,female,['cephalexin'],"['confusional state', 'hallucination', 'illusion', 'nightmare', 'sleep disorder']",1.0
+53.0,female,"['carbamazepine', 'delorazepam', 'olanzapine', 'sertraline', 'sodium oxybate', 'trazodone hydrochloride']","['drug abuse', 'intentional self-injury']",1.0
+77.0,female,"['alcohol', 'alprazolam', 'atorvastatin', 'carvedilol', 'cyanocobalamin', 'duloxetine', 'escitalopram', 'gabapentin', 'hydralazine', 'levothyroxine', 'magnesium oxide', 'memantine', 'metoprolol', 'montelukast', 'trazodone']",['suspected suicide'],1.0
+0.5833333333333334,male,"['beyfortus', 'nirsevimab']",['incorrect dose administered'],2.0
+30.0,male,['ibuprofen'],['drug ineffective'],2.0
+78.0,male,"['acyclovir', 'capecitabine', 'nexium', 'paroxetine', 'simvastatin']","['drug interaction', 'meningitis cryptococcal']",1.0
+85.0,male,['vedolizumab'],['colitis'],1.0
+87.0,female,"['aspirin', 'hydrochlorothiazide', 'leqembi', 'lipitor', 'plavix', 'prilosec']","['cerebral haemorrhage', 'headache', 'tooth infection']",2.0
+69.0,female,['olanzapine'],"['corticobasal degeneration', 'unmasking of previously unidentified disease']",1.0
+47.0,female,"['clonazepam', 'fluoxetine', 'gabapentin', 'pseudoephedrine']",['completed suicide'],1.0
+78.0,female,"['letrozole', 'synthroid']","['arthralgia', 'back pain', 'bone pain', 'myalgia']",2.0
+44.0,female,['meropenem'],['liver injury'],1.0
+11.0,male,['omnitrope'],"['anxiety', 'arthralgia', 'blood glucose increased', 'dengue fever', 'drug dose omission by device', 'expired device used', 'feeding disorder', 'hunger', 'illness', 'influenza', 'nasopharyngitis', 'nervousness', 'pain', 'pain in extremity', 'product communication issue', 'product distribution issue', 'product dose omission issue', 'psoriasis', 'psychomotor hyperactivity', 'sleep disorder', 'somnolence', 'treatment noncompliance']",1.0
+85.0,unknown,"['aspirin', 'biotin', 'calcium', 'cyanocobalamin', 'dietary supplement herbals', 'folic acid', 'furosemide', 'iron', 'jakafi', 'metoprolol succinate', 'synthroid', 'tylenol', 'vitamin d nos']","['off label use', 'swelling face']",2.0
+47.0,male,"['capecitabine', 'tislelizumab']","['cystitis', 'immune-mediated renal disorder', 'myocardial injury', 'urinary tract inflammation']",1.0
+65.0,male,"['bevacizumab', 'capecitabine', 'fluorouracil', 'irinotecan', 'leucovorin calcium', 'oxaliplatin']",['disease progression'],1.0
+57.0,female,"['kedbumin', 'meropenem', 'nidipine sr', 'thyrox']","['blood pressure decreased', 'oxygen saturation decreased', 'restlessness']",1.0
+56.0,unknown,['cladribine'],['breast cancer'],1.0
+63.0,female,['ocrevus'],['breast cancer'],1.0
+35.0,unknown,['cimzia'],['rheumatoid arthritis'],1.0
+41.0,female,"['duloxetine', 'pramipexole', 'spravato']","['euphoric mood', 'fatigue', 'feeling abnormal', 'hallucination, visual', 'insomnia', 'off label use', 'photophobia']",1.0
+71.0,unknown,['jardiance'],"['abdominal discomfort', 'fungal infection', 'urinary tract infection']",2.0
+71.0,female,['nuplazid'],"['product use in unapproved indication', 'therapeutic product effect decreased']",2.0
+64.0,female,"['aleve', 'dupixent']","['choking', 'dry skin', 'dyspepsia', 'dysphagia', 'eosinophilic oesophagitis', 'injection site bruising', 'injection site induration', 'injection site pain', 'injection site pruritus', 'injection site swelling', 'odynophagia', 'oesophageal food impaction', 'product dose omission issue', 'retching']",1.0
+72.0,unknown,"['insulin nos', 'jardiance', 'losartan', 'montelukast', 'mounjaro', 'repatha']","['genital rash', 'injection site haemorrhage', 'injection site pruritus', 'skin discolouration']",2.0
+81.0,male,"['bevacizumab', 'calonal', 'cefaclor', 'lonsurf', 'tramadol']","['delirium', 'underdose']",1.0
+21.0,unknown,"['cyclophosphamide', 'doxorubicin', 'etoposide', 'ponatinib', 'prednisone', 'vincristine']",['therapy non-responder'],1.0
+19.0,female,"['gabapentin', 'imipramine', 'montelukast']",['yawning'],2.0
+68.0,female,"['atorvastatin', 'levothyroxine', 'metoprolol tartrate', 'xdemvy']",['eye pruritus'],2.0
+82.0,female,"['aspirin', 'calcium', 'dihydrocodeine phosphate', 'ergocalciferol', 'hydralazine', 'lyrica', 'metoprolol', 'mycophenolic acid', 'potassium', 'rituxan', 'tylenol', 'tymlos']","['inappropriate schedule of product administration', 'injection site bruising', 'palpitations', 'paraesthesia', 'product administered at inappropriate site', 'underdose']",2.0
+52.0,male,['epinephrine'],"['acute pulmonary oedema', 'blood urea nitrogen/creatinine ratio increased', 'chest pain', 'dyspnoea', 'ejection fraction decreased', 'haemoptysis', 'hypertension', 'hypertensive emergency', 'hypokalaemia', 'hypoxia', 'oedema peripheral', 'orthopnoea', 'product prescribing issue', 'rales', 'respiratory distress', 'tachycardia', 'tachypnoea']",1.0
+64.0,female,"['ayvakit', 'hair skin nails', 'ondansetron', 'vitamins']",['product dose omission in error'],2.0
+41.0,female,['ocrevus'],"['cataract', 'pain in extremity']",1.0
+54.0,male,"['buprenorphine', 'bupropion', 'clonidine', 'hydroxyzine', 'lybalvi']",['drug withdrawal syndrome'],1.0
+81.0,female,['prempro'],"['drug dependence', 'wrong strength']",1.0
+48.0,female,"['beclomethasone dipropionate formoterol fumarate glycopyrrolate', 'bisoprolol fumarate', 'buscapina butylscopolamine bromide', 'cariprazine', 'folic acid', 'infliximab', 'ketoconazol cinfa', 'ketoconazole', 'lambdalina', 'losartan hidroclorotiazida tecnigen', 'mesalamine', 'mirtazapine', 'nasonex', 'omeprazole magnesium', 'prednisone', 'protopic', 'venlafaxine hydrochloride']","['abdominal pain upper', 'dyspnoea', 'infusion related reaction', 'malaise', 'nausea', 'product use issue', 'throat irritation', 'urticaria', 'vomiting']",1.0
+59.0,male,['simponi'],"['pleural effusion', 'tuberculosis']",1.0
+10.0,female,['upadacitinib'],"['blood creatine phosphokinase mb increased', 'off label use']",1.0
+83.0,male,"['gamunex', 'human immunoglobulin g']","['hypoxia', 'off label use', 'transfusion-associated dyspnoea']",1.0
+80.0,female,"['denosumab', 'fulvestrant', 'palbociclib']",['thrombosis'],1.0
+79.0,male,"['acetaminophen tramadol hydrochloride', 'amlodipine besylate', 'aspirin', 'calcium carbonate cholecalciferol', 'clopidogrel', 'escitalopram oxalate', 'foscarbidopa foslevodopa', 'levothyroxine sodium', 'pantoprazole', 'polyethylene glycol 3350 potassium chloride sodium bicarbonate sodium']",['death'],1.0
+67.0,female,"['activated charcoal', 'calcium carbonate', 'calcium phosphate', 'calendula', 'chamomilla homeopathic', 'elm', 'irish moss', 'magnesium carbonate', 'magnesium hydroxide', 'magnesium malate', 'midazolam', 'propoven', 'sodium bicarbonate']","['acute kidney injury', 'arthralgia', 'back pain', 'chills', 'headache', 'hypotension', 'tachycardia']",1.0
+4.0,female,"['calcitriol', 'calcium carbonate', 'prolia', 'vitamin d3']","['drug effective for unapproved indication', 'hypercalcaemia', 'hypocalcaemia', 'influenza like illness', 'off label use', 'rebound effect']",1.0
+88.0,female,"['amlodipine besylate', 'atorvastatin', 'austedo', 'metoprolol succinate', 'nuedexta', 'risperidone', 'sertraline', 'vitamin c', 'vitamin d']",['death'],1.0
+79.0,unknown,"['jakafi', 'tagrisso']","['ageusia', 'blood creatinine increased', 'diabetes mellitus', 'diarrhoea']",1.0
+46.0,female,"['mounjaro', 'ozempic']","['abdominal pain', 'cholelithiasis', 'constipation', 'impaired gastric emptying', 'inflammatory bowel disease']",1.0
+71.0,female,['imatinib'],['drug ineffective'],2.0
+53.0,female,"['acetaminophen', 'acetaminophen codeine phosphate', 'albuterol', 'albuterol sulfate', 'alendronate', 'alendronate sodium cholecalciferol', 'alendronic acid', 'aleve', 'amitriptyline', 'aspirin', 'atrovent hfa', 'avelox', 'azithromycin', 'azithromycin dihydrate', 'breo ellipta', 'bupropion', 'caffeine', 'cefuroxime axetil', 'celebrex', 'celecoxib', 'cephalexin', 'ciprofloxacin', 'ciprofloxacin hydrochloride', 'clarithromycin', 'clonidine', 'clopidogrel', 'clopidogrel bisulfate', 'codeine', 'cymbalta', 'cyproheptadine hydrochloride', 'ferrous gluconate', 'ferrous sulfate', 'flovent', 'furosemide', 'gabapentin', 'gravol', 'indomethacin', 'indomethacin sodium', 'insulin aspart', 'insulin nos', 'ketamine', 'moxifloxacin', 'moxifloxacin hydrochloride', 'naproxen sodium', 'nitrofurantoin', 'nitroglycerin', 'novorapid', 'pantoprazole sodium', 'penicillin', 'penicillin g', 'perindopril', 'perindopril arginine', 'potassium chloride', 'prednisone', 'rosuvastatin', 'rosuvastatin calcium', 'sennosides', 'senokot', 'spiriva', 'sulfadiazine tetroxoprim', 'sulfadiazine trimethoprim', 'sulfamethoxazole', 'sulfamethoxazole trimethoprim', 'sulfatrim', 'sumatriptan', 'sumatriptan succinate', 'tiotropium bromide monohydrate', 'tylenol with codeine', 'vioxx', 'vitamin d', 'vitamin d3', 'wellbutrin']","['abdominal pain', 'abdominal pain upper', 'agitation', 'anxiety', 'bronchitis', 'cystitis', 'depression', 'diarrhoea', 'dizziness', 'fatigue', 'feeling abnormal', 'fibromyalgia', 'fluid retention', 'hallucination', 'hyperhidrosis', 'lymphoedema', 'malaise', 'migraine', 'myocardial infarction', 'obstructive sleep apnoea syndrome', 'oesophageal pain', 'oesophageal spasm', 'pneumonia', 'pruritus', 'rash', 'sleep apnoea syndrome', 'stomatitis', 'tinnitus', 'urticaria', 'vision blurred', 'vomiting']",1.0
+65.0,male,"['dupixent', 'inlyta']","['product dose omission issue', 'rash', 'tooth disorder']",2.0

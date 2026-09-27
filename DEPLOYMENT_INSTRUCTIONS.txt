@@ -1,92 +1,67 @@
 ====================================================================
-               PHARMAI MEDICATION - DEPLOYMENT GUIDE
+        PHARMAI - DEPLOYMENT ON RENDER (FREE TIER, AUTO-DEPLOY)
 ====================================================================
 
-Q: Do I need Vercel?
-A: NO! You ONLY need Render. Render will host both your frontend 
-   website and your backend server together in one place.
+The app has two parts. Both are FREE Render "Web Services" connected to the
+same GitHub repository, and both redeploy automatically on every git push.
+
+  1. pharmaimedication  (already exists)  Node website + OCR
+                        https://pharmaimedication.onrender.com
+  2. pharmai-ml         (create once)     Python ML models
 
 --------------------------------------------------------------------
-STEP 1: HOW TO OPEN TERMINAL ON YOUR COMPUTER (WINDOWS)
+STEP 1: PUSH THE CODE (from the project folder)
 --------------------------------------------------------------------
+  git add -A
+  git commit -m "Real OCR, retrained ML models, Python ML service"
+  git push
 
-Option A (From VS Code / Antigravity):
-  - Press `Ctrl` + `~` (the tilde key next to 1) on your keyboard.
-  - OR click 'Terminal' in the top menu bar -> 'New Terminal'.
-
-Option B (From Windows Search):
-  - Press the Windows Key.
-  - Type "cmd" or "PowerShell".
-  - Open "Command Prompt" or "PowerShell".
-  - Type: cd C:\Users\91970\Downloads\pharmaimedication
-  - Press Enter.
+  The existing "pharmaimedication" service redeploys by itself.
+  (Render dashboard > pharmaimedication > Settings: Build Command
+   "npm install && npm run build", Start Command "npm start" - keep them.)
 
 --------------------------------------------------------------------
-STEP 2: SAVE AND PUSH YOUR CODE TO GITHUB
+STEP 2: CREATE THE ML SERVICE (only once)
 --------------------------------------------------------------------
+  Render dashboard > "New +" > "Web Service" > choose the same
+  "pharmaimedication" GitHub repository, then fill in:
 
-Run these commands one by one in your terminal:
+    Name            : pharmai-ml
+    Branch          : main
+    Root Directory  : (leave empty)
+    Runtime         : Python 3
+    Build Command   : pip install -r backend/requirements.txt
+    Start Command   : uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    Instance Type   : Free
+    Environment variable:  PYTHON_VERSION = 3.11.9
+    Advanced > Health Check Path : /health
+    Advanced > Auto-Deploy       : Yes (default)
 
-1. Initialize git (if not done yet):
-   git init
-
-2. Add all your project files:
-   git add .
-
-3. Commit your files:
-   git commit -m "Initial commit for deployment"
-
-4. Go to GitHub in your browser (https://github.com/new):
-   - Sign in or create an account.
-   - Click the green "New" button to create a new repository.
-   - Name it: pharmaimedication
-   - Click "Create repository".
-
-5. Copy the commands shown on GitHub to link and push your code:
-   git remote add origin https://github.com/YOUR_GITHUB_USERNAME/pharmaimedication.git
-   git branch -M main
-   git push -u origin main
+  Click "Create Web Service" and wait until it says "Live" (5-10 min).
+  Copy its URL, e.g.  https://pharmai-ml.onrender.com
+  Check:  https://pharmai-ml.onrender.com/health  -> {"status":"healthy",...}
 
 --------------------------------------------------------------------
-STEP 3: DEPLOY ON RENDER.COM (FREE & EASY)
+STEP 3: CONNECT THE WEBSITE TO THE ML SERVICE (only once)
 --------------------------------------------------------------------
+  Render dashboard > pharmaimedication > Environment > Add variable:
 
-1. Open https://dashboard.render.com in your web browser.
-2. Sign up or Log in (you can sign in with your GitHub account).
-3. Click the blue "New +" button at the top right and select "Web Service".
-4. Select "Build and deploy from a Git repository".
-5. Connect your GitHub account and select your repository ("pharmaimedication").
-6. Fill in these exact settings:
+    ML_API_URL = https://pharmai-ml.onrender.com     (your URL from step 2)
 
-   - Name:            pharmaimedication
-   - Region:          (Choose any, e.g., Oregon, Frankfurt, Singapore)
-   - Branch:          main
-   - Runtime:         Node
-   - Build Command:   npm install && npm run build
-   - Start Command:   npm start
+  Also make sure NODE_ENV = production is set. Save -> it redeploys.
+
+  Check:  https://pharmaimedication.onrender.com/api/health
+          -> {"web":"ok","ml":"ok", ...}
 
 --------------------------------------------------------------------
-STEP 4: ADD YOUR GEMINI API KEY IN RENDER
+AFTER THAT
 --------------------------------------------------------------------
+  Every "git push" to main redeploys BOTH services automatically.
+  No API keys are needed.
 
-1. On the same Render setup page, scroll down to "Environment Variables".
-2. Click "Add Environment Variable".
-3. Enter the following:
-   - Key:   GEMINI_API_KEY
-   - Value: (Paste your Gemini API key from Google AI Studio)
-
-4. Add one more Environment Variable:
-   - Key:   NODE_ENV
-   - Value: production
-
---------------------------------------------------------------------
-STEP 5: LAUNCH YOUR WEBSITE!
---------------------------------------------------------------------
-
-1. Click the blue "Create Web Service" button at the bottom.
-2. Render will build and deploy your project automatically (takes 2-3 minutes).
-3. Once finished, Render will display your live URL at the top left 
-   (e.g., https://pharmaimedication.onrender.com).
-
-Congratulations! Your app is now live on the internet!
+  Free services sleep after 15 minutes without visitors. Opening the
+  website also wakes the ML service; the first analysis after a long
+  pause can take about 1 minute. Before a demo, open
+  https://pharmaimedication.onrender.com/api/health once and wait
+  until it shows "ml":"ok".
 ====================================================================

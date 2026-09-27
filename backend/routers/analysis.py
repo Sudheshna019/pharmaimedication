@@ -1,411 +1,397 @@
-from fastapi import APIRouter, HTTPException, Header
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
+"""Prescription risk analysis endpoint (hybrid ML + clinical knowledge pipeline).
+
+  1. Normalise every medicine name (brands, combinations, salts, OCR typos)
+  2. Drug-drug interactions for every ingredient pair:
+       ML interaction detector + ML interaction-type model (chemical structure),
+       DrugBank-recorded interactions, curated clinical rules for severity/advice
+  3. Adverse drug reaction risk (FAERS-trained XGBoost, TreeSHAP explanation)
+  4. Known side effects per drug with real frequencies (SIDER 4.1)
+"""
+from __future__ import annotations
+
 import itertools
-import traceback
+import json
+import logging
 import time
+from pathlib import Path
+from typing import List, Optional
 
-# Import your newly migrated, real ML engines
-from backend.services.adr_inference import evaluate_prescription
-from backend.services.ddi_inference import DDIInferenceEngine
-from backend.services.knowledge_base import kb_service  # Keeping for drug-to-SMILES lookup
-from backend.services.firebase_service import firebase_service
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 
+from backend.services.adr_inference import get_adr_engine
+from backend.services.clinical_rules import find_rule
+from backend.services.ddi_inference import get_ddi_engine
+from backend.services.drug_normalizer import get_normalizer
+
+LOGGER = logging.getLogger(__name__)
 router = APIRouter(prefix="/analysis", tags=["ML Analysis & Explainability"])
 
-# Initialize the DDI engine once when the server starts
-try:
-    ddi_engine = DDIInferenceEngine()
-except Exception as e:
-    print(f"Warning: Failed to load DDI engine. Error: {e}")
-    ddi_engine = None
+ARTIFACTS = Path(__file__).resolve().parent.parent / "ml_artifacts"
+SIDER = json.loads((ARTIFACTS / "knowledge" / "sider_side_effects.json").read_text())
+
+SEVERITY_ORDER = {"Low": 0, "Medium": 1, "High": 2, "Critical": 3}
+# Interactions found only in the database / by the ML model (no curated clinical rule) are mostly
+# minor pharmacokinetic effects, so they are graded one level below their interaction-type tier.
+DATABASE_ONLY_SEVERITY = {"High": "Medium", "Medium": "Low", "Low": "Low"}
+# An ADR category raises the overall risk only if it is flagged AND its absolute probability is meaningful
+ADR_OVERALL_MIN_PROB = 0.20
+TOP_SIDE_EFFECTS = 5
+# Narrow therapeutic index drugs: small changes in blood level can cause toxicity or treatment failure
+NARROW_MARGIN = ("tacrolimus", "cyclospor", "sirolimus", "everolimus", "digoxin", "warfarin", "lithium", "phenytoin",
+                 "carbamazepine", "theophylline", "aminophylline", "methotrexate", "clozapine", "valpro",
+                 "phenobarbital", "flecainide", "colchicine", "levothyroxine", "fosphenytoin", "mycophenol")
+LEVEL_UP_TYPES = {1, 4, 5, 9, 10, 14}          # absorption/bioavailability up, metabolism/excretion down, level up
+LEVEL_DOWN_TYPES = {0, 2, 3, 6, 8, 11, 12, 15}  # level or effect of the affected drug goes down
+PK_WORDS = ("metabolism", "serum concentration", "absorption", "bioavailability", "excretion", "protein binding")
+
+DRUG_GUIDANCE = {
+    "paracetamol": "Paracetamol: do not exceed 4 g per day in total (including combination products) to avoid liver damage.",
+    "ibuprofen": "Ibuprofen: take with food; avoid combining with other NSAIDs.",
+    "naproxen": "Naproxen: take with food and maintain good fluid intake.",
+    "diclofenac": "Diclofenac: take with food; avoid long-term use in heart or kidney disease.",
+    "aspirin": "Aspirin: take with food; report black stools or unusual bruising.",
+    "warfarin": "Warfarin: keep vitamin K intake (green leafy vegetables) consistent and check INR regularly.",
+    "clopidogrel": "Clopidogrel: do not stop suddenly; avoid over-the-counter NSAIDs.",
+    "lisinopril": "Lisinopril: monitor blood pressure, serum potassium and kidney function.",
+    "telmisartan": "Telmisartan: monitor blood pressure and serum potassium.",
+    "losartan": "Losartan: monitor blood pressure and serum potassium.",
+    "metformin": "Metformin: take with meals; check kidney function and vitamin B12 periodically.",
+    "atorvastatin": "Atorvastatin: report unexplained muscle pain; avoid large amounts of grapefruit juice.",
+    "rosuvastatin": "Rosuvastatin: report unexplained muscle pain.",
+    "omeprazole": "Omeprazole: take 30-60 minutes before breakfast.",
+    "pantoprazole": "Pantoprazole: take before the morning meal.",
+    "ranitidine": "Ranitidine: note that ranitidine was withdrawn in many countries (NDMA impurity); famotidine is a common alternative.",
+    "fluoxetine": "Fluoxetine: avoid other serotonergic drugs and St John's Wort.",
+    "tramadol": "Tramadol: avoid alcohol and other sedatives.",
+    "amoxicillin": "Amoxicillin: complete the full course even if symptoms improve.",
+    "azithromycin": "Azithromycin: complete the full course.",
+    "digoxin": "Digoxin: monitor pulse, serum potassium and digoxin levels.",
+    "furosemide": "Furosemide: monitor serum potassium and hydration.",
+    "amlodipine": "Amlodipine: ankle swelling is a common side effect; rise slowly to avoid dizziness.",
+    "montelukast": "Montelukast: report mood changes or sleep disturbance.",
+    "cetirizine": "Cetirizine: may cause drowsiness; avoid driving if affected.",
+    "levothyroxine": "Levothyroxine: take on an empty stomach, 30-60 minutes before breakfast.",
+}
+
+# Drugs needing dose review in reduced kidney function (eGFR mL/min/1.73m2)
+RENAL_CAUTION = {
+    "metformin": (45, "Metformin: reduce dose if eGFR 30-45; contraindicated below 30."),
+    "digoxin": (60, "Digoxin: renally cleared - reduce dose and monitor levels."),
+    "class:nsaid": (60, "NSAIDs: avoid or minimise in reduced kidney function."),
+    "gabapentin": (60, "Gabapentin: dose must be reduced for the patient's eGFR."),
+    "pregabalin": (60, "Pregabalin: dose must be reduced for the patient's eGFR."),
+    "spironolactone": (45, "Spironolactone: high hyperkalemia risk in reduced kidney function."),
+    "ciprofloxacin": (50, "Ciprofloxacin: dose adjustment needed in reduced kidney function."),
+    "levofloxacin": (50, "Levofloxacin: dose adjustment needed in reduced kidney function."),
+    "rivaroxaban": (50, "Rivaroxaban: dose adjustment needed in reduced kidney function."),
+    "apixaban": (30, "Apixaban: review dose in reduced kidney function."),
+    "lithium carbonate": (60, "Lithium: renally cleared - monitor levels closely."),
+}
+
 
 class MedicationItem(BaseModel):
-    id: str
+    id: str = ""
     name: str
-    dosage: str
-    frequency: str
+    dosage: str = ""
+    frequency: str = ""
     route: str = "Oral"
 
+
 class PatientData(BaseModel):
-    age: int = 72
-    gender: str = "Female"
-    egfr: float = 58.0
+    age: Optional[float] = None
+    gender: str = "Unknown"
+    egfr: Optional[float] = None
+
 
 class PredictRequest(BaseModel):
-    patientData: PatientData
+    patientData: PatientData = Field(default_factory=PatientData)
     medications: List[MedicationItem]
     userId: Optional[str] = None
 
+
+def _worst(levels) -> str:
+    levels = list(levels)
+    return max(levels, key=lambda s: SEVERITY_ORDER[s]) if levels else "Low"
+
+
+def _fmt(text: str, a: str, b: str) -> str:
+    return text.replace("{a}", a).replace("{b}", b)
+
+
+def _is_narrow_margin(generic: str) -> bool:
+    return any(k in generic for k in NARROW_MARGIN)
+
+
+def _ml_alert(ml: dict) -> bool:
+    """Should a pair without a clinical rule be reported?"""
+    if ml["known_in_drugbank"]:
+        return True
+    # AI-only (not in DrugBank): only very confident predictions of a serious interaction type
+    return (ml["interaction_probability"] >= 0.95 and ml["type_severity"] == "High"
+            and ml["type_confidence"] >= 0.9)
+
+
+SYMPTOM_HINTS = [
+    (("bleeding", "anticoagulant", "antiplatelet", "thrombo"), ["Unusual bruising or bleeding", "Black stools", "Blood in urine"]),
+    (("qtc", "arrhythm", "cardiotoxic", "bradycard", "av block", "tachycard"), ["Palpitations", "Fainting", "Dizziness"]),
+    (("hypotensi",), ["Dizziness on standing", "Light-headedness", "Fainting"]),
+    (("cns depressant", "sedative", "respiratory depressant"), ["Excessive sleepiness", "Confusion", "Slow breathing"]),
+    (("serotonergic", "neuroexcitatory"), ["Agitation", "Fever and sweating", "Tremor or muscle twitching"]),
+    (("hyperkal",), ["Muscle weakness", "Irregular heartbeat"]),
+    (("hypoglyc",), ["Sweating", "Shakiness", "Confusion"]),
+    (("nephrotox",), ["Less urine", "Swelling of feet"]),
+    (("hepatotox",), ["Yellow eyes or skin", "Dark urine"]),
+    (("ulcerogenic",), ["Stomach pain", "Black stools"]),
+]
+
+
+def _simple_symptoms(description: str) -> list[str]:
+    d = description.lower()
+    for keys, symptoms in SYMPTOM_HINTS:
+        if any(k in d for k in keys):
+            return symptoms
+    if "decrease" in d or "reduced" in d:
+        return ["The medicine may not work as well as expected"]
+    return ["More side effects than usual from either medicine"]
+
+
+def _analyse_medicines(meds: list[MedicationItem]):
+    norm = get_normalizer()
+    detected, ingredients = [], {}  # generic -> list of product indices
+    for i, m in enumerate(meds):
+        n = norm.normalize_name(m.name)
+        entry = {
+            "id": m.id or f"med-{i + 1}",
+            "name": n["display"] if n["recognized"] else m.name.strip(),
+            "originalName": m.name.strip(),
+            "dosage": m.dosage or "Not specified",
+            "frequency": m.frequency or "Not specified",
+            "route": m.route or "Oral",
+            "isVerified": n["recognized"],
+            "matchType": ("fuzzy" if n.get("fuzzy") else n["kind"]) if n["recognized"] else "unrecognized",
+            "ingredients": [norm.display_name(g) for g in n["generics"]],
+            "category": ", ".join(sorted({(c or "").replace("_", " ").title() for c in n["classes"] if c})) or None,
+        }
+        ids = [norm.drugbank_id(g) for g in n["generics"] if norm.drugbank_id(g)]
+        entry["sourceDB"] = f"DrugBank {', '.join(ids)}" if ids else ("Drug vocabulary" if n["recognized"] else "Not found")
+        detected.append(entry)
+        for g in n["generics"]:
+            ingredients.setdefault(g, []).append(i)
+    return detected, ingredients
+
+
+def _duplicate_interactions(detected, ingredients):
+    norm = get_normalizer()
+    out = []
+    for g, products in ingredients.items():
+        if len(set(products)) < 2:
+            continue
+        names = [detected[p]["name"] for p in dict.fromkeys(products)]
+        drug = norm.display_name(g)
+        extra = " Total paracetamol must stay below 4 g/day to avoid liver damage." if g == "paracetamol" else ""
+        out.append({
+            "med1": names[0], "med2": names[1], "severity": "High",
+            "description": f"Duplicate ingredient: {drug} is present in both {names[0]} and {names[1]}. "
+                           f"Taking both doubles the dose of {drug}.{extra}",
+            "mechanism": "Therapeutic duplication (same active ingredient)",
+            "biochemicalPathway": "Additive exposure to the same active ingredient",
+            "whyReactionHappens": f"Both products contain {drug}, so the body receives two doses at the same time.",
+            "symptomsToWatch": ["Symptoms of overdose of " + drug, "Nausea or vomiting", "Unusual drowsiness"],
+            "clinicalRecommendation": f"Take only one product containing {drug}, or confirm the combined dose with the prescriber.",
+            "saferAlternative": f"Keep a single {drug}-containing product.",
+            "confidenceScore": 1.0,
+            "evidence": {"source": "Ingredient-level duplicate check", "curatedRule": True,
+                         "drugbankRecorded": False, "mlInteractionProbability": None},
+        })
+    return out
+
+
+def _pair_interactions(detected, ingredients):
+    norm, ddi = get_normalizer(), get_ddi_engine()
+    out, certainties, evaluated = [], [], 0
+    for g1, g2 in itertools.combinations(ingredients, 2):
+        # ingredients of the same combination product are an intended pairing
+        if set(ingredients[g1]) & set(ingredients[g2]) and len(ingredients[g1]) == len(ingredients[g2]) == 1:
+            continue
+        evaluated += 1
+        n1, n2 = norm.display_name(g1), norm.display_name(g2)
+        rule = find_rule(g1, norm.drug_class(g1), g2, norm.drug_class(g2))
+        ml = ddi.predict_pair(g1, g2)
+        if ml:
+            p = ml["interaction_probability"]
+            certainties.append(max(p, 1 - p))
+
+        if rule:
+            a, b = norm.display_name(rule["first"]), norm.display_name(rule["second"])
+            severity, source = rule["severity"], "Curated clinical rule"
+            description = _fmt(rule["description"], a, b)
+            mechanism = pathway = rule["mechanism"]
+            why, symptoms = _fmt(rule["why"], a, b), rule["symptoms"]
+            recommendation, alternative = _fmt(rule["recommendation"], a, b), _fmt(rule["alternative"], a, b)
+        elif ml and _ml_alert(ml):
+            known = ml["known_in_drugbank"]
+            # recorded in DrugBank: one level below the type tier; AI-only prediction: at most Medium
+            severity = DATABASE_ONLY_SEVERITY[ml["known_severity"] if known else ml["type_severity"]]
+            affected = ml["known_affected_drug"] if known else ml["affected_drug"]
+            cls = ml["known_type"] if known else ml["predicted_type"]
+            if _is_narrow_margin(affected) and cls in LEVEL_UP_TYPES | LEVEL_DOWN_TYPES:
+                # small level changes of narrow-therapeutic-index drugs are clinically important
+                severity = "Medium" if severity == "Low" else severity
+                recommendation_extra = f" {norm.display_name(affected)} has a narrow safety margin - its blood level or effect should be monitored."
+            else:
+                recommendation_extra = ""
+            source = "Recorded in DrugBank" if known else "AI model prediction"
+            description = ml["known_description"] if known else ml["description"]
+            pathway = mechanism = ("Changes the level of a drug in the blood" if any(k in description.lower() for k in PK_WORDS)
+                                   else "The two drugs add to or oppose each other's effect")
+            why = description
+            symptoms = _simple_symptoms(description)
+            recommendation = "Tell the doctor or pharmacist about both medicines and watch for the symptoms listed." + recommendation_extra
+            alternative = "The doctor may adjust the dose, space the doses apart, or choose another medicine."
+        else:
+            continue
+
+        out.append({
+            "med1": n1, "med2": n2, "severity": severity,
+            "description": description, "mechanism": mechanism, "biochemicalPathway": pathway,
+            "whyReactionHappens": why, "symptomsToWatch": symptoms,
+            "clinicalRecommendation": recommendation, "saferAlternative": alternative,
+            "confidenceScore": ml["interaction_probability"] if ml else None,
+            "evidence": {
+                "source": source,
+                "curatedRule": bool(rule),
+                "drugbankRecorded": bool(ml and ml["known_in_drugbank"]),
+                "drugbankDescription": ml.get("known_description") if ml else None,
+                "mlInteractionProbability": ml["interaction_probability"] if ml else None,
+                "mlPredictedType": ml["predicted_type"] if ml else None,
+                "mlTypeDescription": ml["description"] if ml else None,
+                "mlTypeConfidence": ml["type_confidence"] if ml else None,
+            },
+        })
+    # minor (Low) interactions are not reported - only clinically meaningful pairs are shown
+    out = [d for d in out if d["severity"] != "Low"]
+    out.sort(key=lambda d: -SEVERITY_ORDER[d["severity"]])
+    return out, certainties, evaluated
+
+
+def _side_effects(ingredients, adr):
+    norm = get_normalizer()
+    out = []
+    for g in ingredients:
+        for se in SIDER.get(g, {}).get("side_effects", [])[:3]:
+            if se["frequencyPercent"] is None:
+                continue
+            out.append({"medName": norm.display_name(g), "effect": se["effect"],
+                        "frequencyPercent": se["frequencyPercent"], "severity": se["severity"],
+                        "category": se["category"]})
+    for t, r in adr["risks"].items():
+        if not r["flagged"]:
+            continue
+        rr, p = r["relative_risk"], r["probability"]
+        out.append({"medName": "All medicines together", "effect": f"{r['label']} risk",
+                    "frequencyPercent": round(p * 100, 1),
+                    "severity": "Severe" if p >= 0.3 else "Moderate" if p >= 0.1 else "Mild",
+                    "category": f"AI prediction ({rr:.1f}x usual risk)"})
+    # show only the 5 most frequent side effects
+    out.sort(key=lambda se: -se["frequencyPercent"])
+    return out[:TOP_SIDE_EFFECTS]
+
+
+def _recommendations(interactions, detected, ingredients, patient, adr):
+    norm = get_normalizer()
+    recs = []
+    for d in interactions:
+        if d["severity"] in ("Critical", "High", "Medium"):
+            recs.append(f"{d['severity']} - {d['med1']} + {d['med2']}: {d['clinicalRecommendation']}")
+    for g in ingredients:
+        if g in DRUG_GUIDANCE:
+            recs.append(DRUG_GUIDANCE[g])
+    if patient.egfr is not None:
+        for g in ingredients:
+            for key, (limit, text) in RENAL_CAUTION.items():
+                hit = key == g or (key.startswith("class:") and norm.drug_class(g) == key[6:])
+                if hit and patient.egfr < limit and text not in recs:
+                    recs.append(f"Renal function (eGFR {patient.egfr:g}): {text}")
+    if patient.age and patient.age >= 65 and len(ingredients) >= 2:
+        recs.append(f"Older patient ({int(patient.age)} yrs) on {len(ingredients)} medicines: review the regimen regularly (Beers criteria) and monitor for falls, dizziness and kidney function.")
+    for t, r in adr["risks"].items():
+        if r["flagged"] and r["relative_risk"] >= 1.5 and r["probability"] >= 0.05:
+            recs.append(f"ADR model: elevated {r['label'].lower()} risk ({r['relative_risk']}x average) - monitor the patient for related symptoms.")
+    unknown = [m["originalName"] for m in detected if not m["isVerified"]]
+    if unknown:
+        recs.append(f"Not recognised: {', '.join(unknown)}. These were not included in the interaction analysis - please verify the spelling.")
+    if not any(d["severity"] != "Low" for d in interactions):
+        recs.append("No clinically significant drug-drug interactions were found between the recognised medicines.")
+    return recs
+
+
 @router.post("/predict-interaction")
-def predict_interaction_risk(payload: PredictRequest, authorization: Optional[str] = Header(None)):
-    """
-    Executes the Dual-Track Clinical AI Pipeline:
-    1. ADR Model (Patient Demographics + Polypharmacy)
-    2. DDI Model (Chemical Structure / SMILES pairings)
-    """
-    try:
-        # Extract user ID dynamically from payload or authorization header
-        user_id = payload.userId
-        if not user_id and authorization and authorization.startswith("Bearer "):
-            # Token provided, extract payload prefix/UID if formatted
-            token = authorization.split("Bearer ")[1]
-            if token and len(token) > 5:
-                user_id = f"usr_{token[:12]}"
-        
-        if not user_id:
-            user_id = "usr_guest"
+def predict_interaction_risk(payload: PredictRequest):
+    if not payload.medications:
+        raise HTTPException(status_code=400, detail="At least one medication is required.")
+    t0 = time.time()
+    patient = payload.patientData
+    sex = (patient.gender or "unknown").lower()
 
-        # 1. Extract basic data and perform strict drug verification against pharmacopeia database
-        VERIFIED_DRUGS = {
-            "paracetamol", "acetaminophen", "ibuprofen", "naproxen", "aspirin", "warfarin", 
-            "lisinopril", "metformin", "atorvastatin", "clopidogrel", "omeprazole", "pantoprazole", 
-            "fluoxetine", "tramadol", "amoxicillin", "ciprofloxacin", "azithromycin", "doxycycline", 
-            "diclofenac", "telmisartan", "amlodipine", "montelukast", "cetirizine", "spironolactone", 
-            "furosemide", "digoxin", "eliquis", "xarelto", "heparin", "prednisone", "rantac", 
-            "ranitidine", "sm fibro", "fibro", "pan 40", "calpol", "crocin", "dolo", "simvastatin", 
-            "levothyroxine", "metoprolol", "gabapentin", "hydrochlorothiazide", "losartan", "albuterol"
-        }
+    detected, ingredients = _analyse_medicines(payload.medications)
+    duplicates = _duplicate_interactions(detected, ingredients)
+    pairs, certainties, evaluated = _pair_interactions(detected, ingredients)
+    interactions = duplicates + pairs
 
-        med_list = []
-        for m in payload.medications:
-            m_dict = m.model_dump()
-            m_clean = m_dict["name"].lower()
-            is_ver = any(k in m_clean for k in VERIFIED_DRUGS)
-            m_dict["isVerified"] = is_ver
-            med_list.append(m_dict)
+    adr = get_adr_engine().predict(patient.age, sex, list(ingredients)) if ingredients else \
+        {"risks": {}, "shap": [], "explained_label": None, "shap_base_value": 0.0}
+    side_effects = _side_effects(ingredients, adr)
 
-        # Safety: Only verified drugs are passed to risk model and DDI interaction matrix
-        verified_drug_names = [m["name"].lower() for m in med_list if m["isVerified"]]
-        
-        # ---------------------------------------------------------
-        # TRACK 1: ADR (Adverse Drug Reactions based on Patient)
-        # ---------------------------------------------------------
-        try:
-            adr_results = evaluate_prescription(
-                age=payload.patientData.age,
-                sex=payload.patientData.gender,
-                renal_egfr=payload.patientData.egfr,
-                drug_names=verified_drug_names
-            )
-        except Exception as e:
-            print(f"ADR Error: {e}")
-            adr_results = {"machine_learning_adr_predictions": {}, "rule_based_ddi_analysis": {}}
+    risk = _worst(d["severity"] for d in interactions)
+    if risk == "Low" and any(r["flagged"] and r["probability"] >= ADR_OVERALL_MIN_PROB and r["relative_risk"] >= 2
+                             for r in adr["risks"].values()):
+        risk = "Medium"
 
-        # ---------------------------------------------------------
-        # TRACK 2: DDI (Chemical Drug-Drug Interactions)
-        # ---------------------------------------------------------
-        SMILES_DB = {
-            "aspirin": "CC(=O)OC1=CC=CC=C1C(=O)O",
-            "warfarin": "CC1=CC2=CC3=C(OC(=O)C=C3C)C(C)=C2O1", 
-            "lisinopril": "N[C@@H](CCCCN)C(=O)N1CCC[C@H]1C(=O)O",
-            "potassium": "[K+]",
-            "kcl": "[K+].[Cl-]",
-            "spironolactone": "CC12CCC3C(C1CCC24CCC(=O)O4)CCC5=CC(=O)CCC35C",
-            "clopidogrel": "COC(=O)C(C1=CC=CC=C1Cl)N2CCC3=C(C2)CSC3",
-            "omeprazole": "CC1=CN=C(C(=C1OC)C)CS(=O)C2=NC3=C(N2)C=C(C=C3)OC",
-            "fluoxetine": "CNC(C)CCOC1=CC=C(C=C1)C(F)(F)F",
-            "tramadol": "CN(C)CC1(CCCCC1O)C2=CC=CC=C2"
-        }
+    if certainties:
+        confidence = sum(certainties) / len(certainties)
+    elif adr["risks"]:
+        confidence = sum(max(r["probability"], 1 - r["probability"]) for r in adr["risks"].values()) / len(adr["risks"])
+    else:
+        confidence = 0.0
 
-        interactions = []
-        if len(verified_drug_names) >= 2:
-            drug_pairs = list(itertools.combinations(verified_drug_names, 2))
-            
-            # Rule-Based Clinical DDI Engine
-            RULE_DDI_PAIRS = [
-                {
-                    "keys": ("ibuprofen", "naproxen"),
-                    "pair": "Ibuprofen + Naproxen Sodium",
-                    "severity": "HIGH",
-                    "confidence": "96.00%",
-                    "clinical_warning": "Dual Systemic NSAID Co-Prescription Warning: Combining Ibuprofen and Naproxen produces additive COX-1/COX-2 inhibition, significantly increasing risk of gastric ulceration, gastrointestinal hemorrhage, and acute renal impairment without added analgesic benefit.",
-                    "interaction_type_id": "Synergistic GI & Renal Toxicity",
-                    "clinicalRecommendation": "Discontinue either Ibuprofen or Naproxen. Avoid concurrent dual NSAID administration."
-                },
-                {
-                    "keys": ("aspirin", "warfarin"),
-                    "pair": "Aspirin + Warfarin",
-                    "severity": "HIGH",
-                    "confidence": "98.00%",
-                    "clinical_warning": "High Hemorrhagic Risk: Aspirin antiplatelet activity combined with Warfarin anticoagulation exponentially elevates systemic bleeding and GI hemorrhage risk.",
-                    "interaction_type_id": "Pharmacodynamic Bleeding Synergy",
-                    "clinicalRecommendation": "Re-evaluate dual antiplatelet/anticoagulant necessity and closely monitor INR metrics."
-                },
-                {
-                    "keys": ("clopidogrel", "omeprazole"),
-                    "pair": "Clopidogrel + Omeprazole",
-                    "severity": "HIGH",
-                    "confidence": "95.00%",
-                    "clinical_warning": "CYP2C19 Metabolic Inhibition: Omeprazole blocks bioactivation of Clopidogrel, reducing antiplatelet protection.",
-                    "interaction_type_id": "Enzyme Inhibition",
-                    "clinicalRecommendation": "Switch Omeprazole to Pantoprazole 40mg which does not inhibit CYP2C19."
-                }
-            ]
+    shap = [{
+        "featureName": s["featureName"],
+        "impactValue": s["impactValue"],
+        "category": s["category"],
+        "direction": "increases_risk" if s["impactValue"] > 0 else "decreases_risk",
+        "explanation": f"TreeSHAP contribution (log-odds) to the predicted {adr['explained_label'].lower()} risk.",
+    } for s in adr["shap"]]
 
-            for m1, m2 in drug_pairs:
-                # Check Rule Base First
-                rule_matched = False
-                for r_rule in RULE_DDI_PAIRS:
-                    k1, k2 = r_rule["keys"]
-                    if (k1 in m1 and k2 in m2) or (k1 in m2 and k2 in m1):
-                        interactions.append({
-                            "pair": r_rule["pair"],
-                            "interaction_type_id": r_rule["interaction_type_id"],
-                            "confidence": r_rule["confidence"],
-                            "clinical_warning": r_rule["clinical_warning"],
-                            "severity": r_rule["severity"],
-                            "clinicalRecommendation": r_rule["clinicalRecommendation"]
-                        })
-                        rule_matched = True
-                        break
+    return {
+        "success": True,
+        "data": {
+            "id": f"ANALYSIS-{int(time.time() * 1000) % 100000:05d}",
+            "overallRiskLevel": risk,
+            "overallConfidenceScore": round(confidence, 3),
+            "detectedMedicines": detected,
+            "drugInteractions": interactions,
+            "sideEffects": side_effects,
+            "clinicalRecommendations": _recommendations(interactions, detected, ingredients, patient, adr),
+            "shapFeatures": shap,
+            "adrPredictions": adr["risks"],
+            "shapSummary": adr.get("summary"),
+            "modelInfo": {
+                "engine": "PharmAI hybrid ML pipeline (Python)",
+                "pairsEvaluated": evaluated,
+                "shapExplainedOutcome": adr["explained_label"],
+                "latencyMs": round((time.time() - t0) * 1000),
+            },
+        },
+    }
 
-                if not rule_matched and ddi_engine:
-                    smiles_1 = SMILES_DB.get(m1)
-                    smiles_2 = SMILES_DB.get(m2)
-                    if smiles_1 and smiles_2:
-                        ddi_pred = ddi_engine.predict_interaction(smiles_1, smiles_2)
-                        interactions.append({
-                            "pair": f"{m1.title()} + {m2.title()}",
-                            "interaction_type_id": ddi_pred["predicted_type"],
-                            "confidence": f"{ddi_pred['confidence'] * 100:.2f}%",
-                            "clinical_warning": ddi_pred["description"],
-                            "severity": "HIGH" if ddi_pred['confidence'] > 0.8 else "MODERATE"
-                        })
 
-        # ---------------------------------------------------------
-        # PACKAGE RESPONSE (Mapped perfectly to React AnalysisResult)
-        # ---------------------------------------------------------
-        
-        # Calculate overall risk based on interactions and ADR predictions
-        highest_severity = "Low"
-        for interaction in interactions:
-            if interaction["severity"] == "HIGH":
-                highest_severity = "High"
-                break
-
-        formatted_side_effects = []
-        adr_preds = adr_results.get("machine_learning_adr_predictions", {})
-        for effect_name, pct_str in adr_preds.items():
-            try:
-                pct = float(str(pct_str).replace("%", "").strip())
-                if pct >= 5.0: # Include clinically relevant ADRs
-                    sev = "Severe" if pct >= 50.0 else ("Moderate" if pct >= 25.0 else "Mild")
-                    formatted_side_effects.append({
-                        "medName": med_list[0]["name"] if med_list else "Prescribed Regimen",
-                        "effect": effect_name,
-                        "frequencyPercent": round(pct, 1),
-                        "severity": sev,
-                        "category": "ADR Model Prediction"
-                    })
-            except (ValueError, TypeError):
-                pass
-
-        # Fallback database lookup for specific medication side effects
-        if not formatted_side_effects and med_list:
-            SIDER_SIDE_EFFECTS_DB = {
-                "paracetamol": [
-                    {"effect": "Transient Liver Enzyme Elevation", "frequencyPercent": 2.1, "severity": "Mild"},
-                    {"effect": "Mild Nausea", "frequencyPercent": 1.8, "severity": "Mild"}
-                ],
-                "ibuprofen": [
-                    {"effect": "Dyspepsia & Stomach Upset", "frequencyPercent": 5.2, "severity": "Mild"},
-                    {"effect": "Gastric Mucosal Irritation", "frequencyPercent": 3.1, "severity": "Moderate"}
-                ],
-                "naproxen": [
-                    {"effect": "Abdominal Distress & Heartburn", "frequencyPercent": 4.8, "severity": "Mild"},
-                    {"effect": "Gastric Acid Reflux", "frequencyPercent": 3.5, "severity": "Mild"}
-                ],
-                "rantac": [
-                    {"effect": "Headache & Light Dizziness", "frequencyPercent": 4.5, "severity": "Mild"},
-                    {"effect": "Abdominal Discomfort & Constipation", "frequencyPercent": 3.2, "severity": "Mild"}
-                ],
-                "ranitidine": [
-                    {"effect": "Headache & Light Dizziness", "frequencyPercent": 4.5, "severity": "Mild"},
-                    {"effect": "Abdominal Discomfort & Constipation", "frequencyPercent": 3.2, "severity": "Mild"}
-                ],
-                "fibro": [
-                    {"effect": "Mild Gastrointestinal Fullness", "frequencyPercent": 2.0, "severity": "Mild"},
-                    {"effect": "Transient Facial Warmth / Flushing", "frequencyPercent": 1.5, "severity": "Mild"}
-                ],
-                "sm fibro": [
-                    {"effect": "Mild Gastrointestinal Fullness", "frequencyPercent": 2.0, "severity": "Mild"},
-                    {"effect": "Transient Facial Warmth / Flushing", "frequencyPercent": 1.5, "severity": "Mild"}
-                ],
-                "aspirin": [
-                    {"effect": "Gastric Mucosal Irritation & Heartburn", "frequencyPercent": 12.4, "severity": "Moderate"},
-                    {"effect": "Increased Bruising & Minor Bleeding", "frequencyPercent": 8.1, "severity": "Moderate"}
-                ],
-                "warfarin": [
-                    {"effect": "Minor Nosebleeds & Soft Tissue Bruising", "frequencyPercent": 14.2, "severity": "Severe"},
-                    {"effect": "GI Micro-hemorrhage Risk", "frequencyPercent": 6.8, "severity": "Severe"}
-                ],
-                "lisinopril": [
-                    {"effect": "Persistent Dry Cough", "frequencyPercent": 9.5, "severity": "Mild"},
-                    {"effect": "Postural Dizziness / Hypotension", "frequencyPercent": 5.2, "severity": "Moderate"}
-                ],
-                "omeprazole": [
-                    {"effect": "Nausea & Flatulence", "frequencyPercent": 4.0, "severity": "Mild"},
-                    {"effect": "Long-term Vitamin B12 Reduction", "frequencyPercent": 2.8, "severity": "Mild"}
-                ]
-            }
-
-            # Deduplicate med_list by name before generating side effects
-            unique_meds_dict = {}
-            for m in med_list:
-                unique_meds_dict[m["name"].lower()] = m
-            deduped_meds = list(unique_meds_dict.values())
-
-            for m in deduped_meds:
-                m_name_lower = m["name"].lower()
-                matched = False
-                for db_key, effects in SIDER_SIDE_EFFECTS_DB.items():
-                    if db_key in m_name_lower:
-                        matched = True
-                        for eff in effects:
-                            formatted_side_effects.append({
-                                "medName": m["name"],
-                                "effect": eff["effect"],
-                                "frequencyPercent": eff["frequencyPercent"],
-                                "severity": eff["severity"],
-                                "category": "Clinical Database Profile"
-                            })
-                if not matched:
-                    formatted_side_effects.append({
-                        "medName": m["name"],
-                        "effect": "Mild Gastrointestinal Discomfort",
-                        "frequencyPercent": 2.5,
-                        "severity": "Mild",
-                        "category": "Clinical Baseline"
-                    })
-        
-        # Format interactions for React
-        formatted_interactions = []
-        for ddi in interactions:
-            meds = ddi["pair"].split(" + ")
-            formatted_interactions.append({
-                "med1": meds[0],
-                "med2": meds[1],
-                "severity": "Critical" if float(ddi["confidence"].strip('%')) > 95 else ddi["severity"].capitalize(),
-                "description": ddi["clinical_warning"],
-                "mechanism": f"Clinical Interaction: {ddi['interaction_type_id']}",
-                "clinicalRecommendation": ddi.get("clinicalRecommendation", "Monitor patient closely and consider dose adjustment."),
-                "confidenceScore": float(ddi["confidence"].strip('%')) / 100
-            })
-
-        # Generate dynamic SHAP feature contributions based on live patient inputs
-        shap_features = []
-        if payload.patientData.age >= 65:
-            shap_features.append({
-                "featureName": f"Patient Age ({payload.patientData.age} Yrs)",
-                "impactValue": round(0.15 + (payload.patientData.age - 65) * 0.005, 2),
-                "category": "Patient Demographics",
-                "direction": "increases_risk",
-                "explanation": "Advanced age (>65 Yrs) correlates with reduced drug metabolism & renal clearance."
-            })
-
-        if payload.patientData.egfr < 60.0:
-            shap_features.append({
-                "featureName": f"Reduced Renal eGFR ({payload.patientData.egfr} mL/min)",
-                "impactValue": round(0.20 + (60 - payload.patientData.egfr) * 0.005, 2),
-                "category": "Organ Function / PK",
-                "direction": "increases_risk",
-                "explanation": "Impaired renal clearance delays active metabolite elimination."
-            })
-
-        if len(med_list) >= 2:
-            shap_features.append({
-                "featureName": f"Polypharmacy Regimen ({len(med_list)} Meds)",
-                "impactValue": round(0.08 * len(med_list), 2),
-                "category": "Drug Count",
-                "direction": "increases_risk",
-                "explanation": "Multiple concurrent prescriptions increase pharmacokinetic interaction surfaces."
-            })
-
-        # Dynamic Clinical Recommendations Generator tailored to exact scanned medicines
-        clinical_recommendations = []
-
-        # 1. Interaction Recommendations
-        for ddi in formatted_interactions:
-            if ddi.get("clinicalRecommendation"):
-                clinical_recommendations.append(f"Interaction Alert ({ddi['med1']} + {ddi['med2']}): {ddi['clinicalRecommendation']}")
-
-        # 2. Drug-Specific Clinical Guidance
-        DRUG_RECOMMENDATION_DB = {
-            "paracetamol": "Administer Paracetamol 500mg as directed for pain/fever. Do not exceed 4,000 mg total daily dosage to prevent hepatotoxicity.",
-            "ibuprofen": "Take Ibuprofen with meals or milk to minimize stomach irritation. Avoid combining with other NSAIDs.",
-            "naproxen": "Take Naproxen Sodium with food to minimize gastric acid distress. Maintain adequate fluid intake.",
-            "rantac": "Administer Rantac (Ranitidine 150mg) after meals as prescribed to suppress gastric H2 acid secretion and protect stomach mucosal lining.",
-            "ranitidine": "Administer Ranitidine 150mg after meals to reduce gastric acid production and prevent mucosal irritation.",
-            "fibro": "Take Cap SM Fibro with water after meals to optimize absorption of essential micronutrients and antioxidants during recovery.",
-            "sm fibro": "Take Cap SM Fibro with water after meals to optimize absorption of essential micronutrients and antioxidants during recovery.",
-            "aspirin": "Take Aspirin with food or milk to minimize stomach irritation. Report any unexplained dark bruising or tarry stools immediately.",
-            "warfarin": "Maintain consistent daily Vitamin K dietary intake (green leafy vegetables). Perform routine INR blood clotting tests.",
-            "lisinopril": "Monitor resting blood pressure regularly and consult clinician regarding periodic serum potassium and renal eGFR tests.",
-            "metformin": "Take Metformin with meals to minimize gastrointestinal upset. Ensure annual Vitamin B12 level assessments.",
-            "clopidogrel": "Maintain daily regimen without abrupt discontinuation. Avoid unprescribed OTC NSAIDs.",
-            "omeprazole": "Take Omeprazole 30-60 minutes before breakfast for optimal gastric parietal cell acid suppression.",
-            "pantoprazole": "Take Pantoprazole before morning meal as directed for mucosal ulcer protection.",
-            "atorvastatin": "Take statin medication in the evening. Avoid large quantities of grapefruit juice (>1 quart/day).",
-            "fluoxetine": "Avoid combining SSRIs with St. John's Wort or unprescribed serotonergic medications to prevent serotonin syndrome.",
-            "tramadol": "Avoid alcohol strictly while taking opioid analgesics to prevent severe sedation and respiratory depression.",
-            "amoxicillin": "Complete the full course of antibiotic therapy as prescribed, even if symptoms resolve early."
-        }
-
-        for m in med_list:
-            m_lower = m["name"].lower()
-            for key, rec_text in DRUG_RECOMMENDATION_DB.items():
-                if key in m_lower and rec_text not in clinical_recommendations:
-                    clinical_recommendations.append(rec_text)
-
-        # 3. Patient Demographics Guidance
-        if payload.patientData.age >= 65:
-            clinical_recommendations.append(f"Geriatric Patient Management ({payload.patientData.age} Yrs): Ensure routine metabolic panel checks and adequate hydration.")
-        if payload.patientData.egfr < 60.0:
-            clinical_recommendations.append(f"Renal Function Notice (eGFR {payload.patientData.egfr} mL/min): Adjust medication dosages according to renal clearance capacity.")
-
-        # Baseline safety default if empty
-        if not clinical_recommendations:
-            clinical_recommendations = [
-                "Take all medications strictly as directed on the prescription label.",
-                "Maintain optimal daily hydration and schedule routine follow-up checkups with your attending physician."
-            ]
-
-        analysis_id = f"ANALYSIS-{int(time.time() * 1000) % 10000:04d}"
-
-        # Calculate dynamic confidence score based on verified drug count & interaction confidence
-        verified_count = len([m for m in med_list if m.get("isVerified")])
-        ver_ratio = verified_count / max(len(med_list), 1)
-        dynamic_conf = round(0.85 + (ver_ratio * 0.10) + (0.03 if highest_severity == "High" else 0.01), 3)
-
-        response_payload = {
-            "success": True,
-            "data": {
-                "id": analysis_id,
-                "overallRiskLevel": highest_severity,
-                "overallConfidenceScore": dynamic_conf,
-                "detectedMedicines": med_list,
-                "drugInteractions": formatted_interactions,
-                "sideEffects": formatted_side_effects,
-                "clinicalRecommendations": clinical_recommendations,
-                "shapFeatures": shap_features if shap_features else [{
-                    "featureName": "Standard Polypharmacy Load",
-                    "impactValue": 0.1,
-                    "category": "Drug Count",
-                    "direction": "increases_risk",
-                    "explanation": "Low inherent baseline interaction score."
-                }]
-            }
-        }
-
-        # Save snapshot to Firebase Firestore using user_id
-        try:
-            firebase_service.save_analysis_result(user_id, response_payload["data"])
-        except Exception as e:
-            print(f"Firebase save failed: {e}")
-
-        return response_payload
-
-    except Exception as e:
-        print(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
+@router.get("/model-metrics")
+def model_metrics():
+    """Real test-set metrics of the deployed models."""
+    def load(p):
+        return json.loads((ARTIFACTS / p).read_text())
+    ddi_type = load("ddi/ddi_type_metrics.json")
+    ddi_type.pop("classification_report", None)
+    adr = load("adr/adr_metrics.json")
+    return {"ddi_type_model": ddi_type, "ddi_detection_model": load("ddi/ddi_detect_metrics.json"), "adr_model": adr}

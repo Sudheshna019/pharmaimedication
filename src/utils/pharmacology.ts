@@ -310,6 +310,54 @@ export const DRUG_KNOWLEDGE_BASE: Record<string, DrugKnowledge> = {
   }
 };
 
+Object.assign(DRUG_KNOWLEDGE_BASE, {
+  'furosemide': {
+    purpose: 'Loop diuretic ("water pill") that removes excess fluid from the body.',
+    targetOrgan: 'Kidney (loop of Henle)',
+    mechanismOfAction: 'Blocks the Na+/K+/2Cl- co-transporter in the thick ascending loop of Henle, increasing salt and water excretion.',
+    commonUse: 'Prescribed for fluid overload in heart failure, oedema and high blood pressure.',
+    foodInteractions: 'Can lower potassium - potassium-rich foods (bananas, oranges) may be advised. Limit alcohol.',
+    category: 'Loop Diuretic',
+    isVerified: true
+  },
+  'amlodipine': {
+    purpose: 'Calcium channel blocker that lowers blood pressure and prevents angina.',
+    targetOrgan: 'Arterial smooth muscle & coronary arteries',
+    mechanismOfAction: 'Blocks L-type calcium channels in vascular smooth muscle, relaxing and widening blood vessels.',
+    commonUse: 'Prescribed for hypertension and stable angina.',
+    foodInteractions: 'Large amounts of grapefruit juice can modestly raise its level.',
+    category: 'Calcium Channel Blocker',
+    isVerified: true
+  },
+  'telmisartan': {
+    purpose: 'Angiotensin II receptor blocker (ARB) that lowers blood pressure.',
+    targetOrgan: 'Blood vessels, kidney & adrenal gland (AT1 receptors)',
+    mechanismOfAction: 'Blocks angiotensin II at AT1 receptors, relaxing blood vessels and reducing aldosterone release.',
+    commonUse: 'Prescribed for hypertension and cardiovascular risk reduction.',
+    foodInteractions: 'Avoid potassium supplements or salt substitutes unless advised (risk of high potassium).',
+    category: 'Angiotensin Receptor Blocker',
+    isVerified: true
+  },
+  'montelukast': {
+    purpose: 'Leukotriene receptor antagonist that prevents asthma and allergy symptoms.',
+    targetOrgan: 'Airways (bronchial smooth muscle) & nasal mucosa',
+    mechanismOfAction: 'Blocks cysteinyl-leukotriene (CysLT1) receptors, reducing airway inflammation and constriction.',
+    commonUse: 'Prescribed for asthma prevention and allergic rhinitis.',
+    foodInteractions: 'No significant food interactions; usually taken in the evening.',
+    category: 'Leukotriene Receptor Antagonist',
+    isVerified: true
+  },
+  'spironolactone': {
+    purpose: 'Potassium-sparing diuretic and aldosterone antagonist.',
+    targetOrgan: 'Kidney (distal tubule / collecting duct)',
+    mechanismOfAction: 'Blocks aldosterone receptors, increasing sodium and water excretion while retaining potassium.',
+    commonUse: 'Prescribed for heart failure, resistant hypertension, oedema and hyperaldosteronism.',
+    foodInteractions: 'Avoid potassium supplements and salt substitutes (risk of high potassium).',
+    category: 'Potassium-Sparing Diuretic',
+    isVerified: true
+  }
+});
+
 export function getDrugKnowledge(medName: string): DrugKnowledge {
   const clean = medName.toLowerCase();
   for (const [key, kb] of Object.entries(DRUG_KNOWLEDGE_BASE)) {
@@ -351,6 +399,22 @@ export function enrichAnalysisWithDetails(result: AnalysisResult): AnalysisResul
         commonUse: 'Unrecognized Entry - Verify spelling with physician.',
         foodInteractions: 'Unknown dietary interactions for unverified entry.',
         category: 'Unverified Entry'
+      };
+    }
+
+    if (!kb.isVerified) {
+      // recognised by the drug dictionary but no detailed profile in this local knowledge base
+      const cls = medObj.category || 'Medicine';
+      const ingredients = (medObj.ingredients || []).join(' + ') || medName;
+      return {
+        ...medObj,
+        isVerified: true,
+        purpose: `${ingredients} - ${cls}.`,
+        targetOrgan: 'See product information',
+        mechanismOfAction: `Pharmacological class: ${cls}.`,
+        commonUse: `Recognised medicine (${ingredients}); detailed profile not in the local knowledge base.`,
+        foodInteractions: 'Follow the label and pharmacist advice.',
+        category: cls
       };
     }
 
@@ -456,67 +520,19 @@ export function enrichAnalysisWithDetails(result: AnalysisResult): AnalysisResul
     }
   }
 
-  // 4. Calculate dynamic overallRiskLevel based on highest interaction severity
-  let calculatedRisk: SeverityLevel = 'Low';
-  if (enrichedInteractions.length > 0) {
-    const hasCritical = enrichedInteractions.some((i: any) => 
-      (i.severity || '').toLowerCase().includes('critical') || (i.severity || '').toLowerCase().includes('severe')
-    );
-    const hasHigh = enrichedInteractions.some((i: any) => 
-      (i.severity || '').toLowerCase().includes('high') || (i.severity || '').toLowerCase().includes('major')
-    );
-    const hasMedium = enrichedInteractions.some((i: any) => 
-      (i.severity || '').toLowerCase().includes('medium') || (i.severity || '').toLowerCase().includes('moderate')
-    );
-
-    if (hasCritical) calculatedRisk = 'Critical';
-    else if (hasHigh) calculatedRisk = 'High';
-    else if (hasMedium) calculatedRisk = 'Medium';
-    else calculatedRisk = 'Low';
-  } else {
-    calculatedRisk = 'Low';
-  }
-
-  // Dynamic overall confidence calculation based on verification ratio & interaction confidence
-  let confVal = result?.overallConfidenceScore && !isNaN(result.overallConfidenceScore) && result.overallConfidenceScore !== 0.96 && result.overallConfidenceScore !== 0.92
-    ? result.overallConfidenceScore
-    : 0;
-
-  if (!confVal || confVal <= 0) {
-    const totalMeds = enrichedMeds.length;
-    const verifiedCount = enrichedMeds.filter(m => m.isVerified !== false).length;
-    const verRatio = totalMeds > 0 ? verifiedCount / totalMeds : 0.9;
-    
-    let interactionConfAvg = 0.95;
-    if (enrichedInteractions.length > 0) {
-      const sumConf = enrichedInteractions.reduce((acc: number, curr: any) => {
-        const c = curr.confidenceScore && !isNaN(curr.confidenceScore) ? curr.confidenceScore : 0.94;
-        return acc + c;
-      }, 0);
-      interactionConfAvg = sumConf / enrichedInteractions.length;
-    }
-
-    // Dynamic scale between 0.82 and 0.98 based on real input characteristics
-    confVal = Number((0.75 + (verRatio * 0.18) + (interactionConfAvg * 0.05)).toFixed(3));
-  }
+  // 4. Overall risk: keep the level computed by the ML service; derive it only for records without one
+  const ORDER: SeverityLevel[] = ['Low', 'Medium', 'High', 'Critical'];
+  const derivedRisk = enrichedInteractions.reduce((worst: SeverityLevel, i: any) => {
+    const sev = ORDER.includes(i.severity) ? (i.severity as SeverityLevel) : 'Low';
+    return ORDER.indexOf(sev) > ORDER.indexOf(worst) ? sev : worst;
+  }, 'Low' as SeverityLevel);
 
   return {
     ...result,
-    overallRiskLevel: calculatedRisk,
-    overallConfidenceScore: confVal,
-    detectedMedicines: enrichedMeds.map(m => ({
-      ...m,
-      confidence: m.confidence || (m.isVerified !== false ? 0.97 : 0.82)
-    })),
-    drugInteractions: enrichedInteractions.map((i: any, idx: number) => {
-      // Vary interaction confidence dynamically based on severity & match precision
-      const baseConf = i.severity === 'Critical' ? 0.98 : (i.severity === 'High' ? 0.95 : 0.89);
-      const varConf = Number((baseConf - (idx * 0.01)).toFixed(2));
-      return {
-        ...i,
-        confidenceScore: i.confidenceScore && !isNaN(i.confidenceScore) && i.confidenceScore !== 0.95 ? i.confidenceScore : varConf
-      };
-    }),
+    overallRiskLevel: result.overallRiskLevel || derivedRisk,
+    overallConfidenceScore: result.overallConfidenceScore ?? 0,
+    detectedMedicines: enrichedMeds,
+    drugInteractions: enrichedInteractions,
     clinicalRecommendations: enrichedRecs,
     shapFeatures: result.shapFeatures || []
   };

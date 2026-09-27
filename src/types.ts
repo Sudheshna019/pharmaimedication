@@ -9,6 +9,9 @@ export interface MedicineItem {
   confidence?: number;
   sourceDB?: string;
   isVerified?: boolean;
+  originalName?: string;       // name as written on the prescription
+  ingredients?: string[];      // active ingredients after normalisation
+  matchType?: string;          // generic | brand | combination | fuzzy | unrecognized
   category?: string;
   purpose?: string;            // What this medicine does in plain language
   targetOrgan?: string;        // Primary target organ or body system
@@ -29,7 +32,34 @@ export interface DrugInteraction {
   symptomsToWatch?: string[];    // Key red-flag symptoms to monitor
   saferAlternative?: string;     // Recommended alternative or timing fix
   clinicalRecommendation: string;
-  confidenceScore: number;
+  confidenceScore: number | null;  // ML interaction probability (null if no structure available)
+  evidence?: InteractionEvidence;
+}
+
+export interface InteractionEvidence {
+  source: string;
+  curatedRule: boolean;
+  drugbankRecorded: boolean;
+  drugbankDescription?: string | null;
+  mlInteractionProbability: number | null;
+  mlPredictedType?: number | null;
+  mlTypeDescription?: string | null;
+  mlTypeConfidence?: number | null;
+}
+
+export interface AdrPrediction {
+  label: string;
+  probability: number;
+  threshold: number;
+  flagged: boolean;
+  relative_risk: number;
+  baseline_rate: number;
+}
+
+export interface ShapSummary {
+  outcome: string;
+  baseProbability: number;
+  finalProbability: number;
 }
 
 export interface SideEffect {
@@ -66,6 +96,9 @@ export interface AnalysisResult {
   overallConfidenceScore: number;
   clinicalRecommendations: string[];
   shapFeatures: ShapFeature[];
+  adrPredictions?: Record<string, AdrPrediction>;
+  shapSummary?: ShapSummary | null;
+  modelInfo?: { engine: string; pairsEvaluated: number; shapExplainedOutcome: string | null; latencyMs: number };
   doctorNotes?: string;
   status: 'Completed' | 'Pending Review' | 'Flagged';
   prescribingDoctor?: string;

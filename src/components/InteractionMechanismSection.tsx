@@ -146,7 +146,9 @@ export const InteractionMechanismSection: React.FC<InteractionMechanismSectionPr
                 </p>
                 <div className="text-[11px] text-emerald-800 font-semibold italic pt-1 border-t border-emerald-200/60 flex items-center justify-between">
                   <span>Clinical Recommendation: {inter.clinicalRecommendation}</span>
-                  <span className="font-mono">Confidence: {((inter.confidenceScore || 0.95) * 100).toFixed(0)}%</span>
+                  {inter.confidenceScore != null && (
+                    <span className="font-mono">Confidence: {(inter.confidenceScore * 100).toFixed(0)}%</span>
+                  )}
                 </div>
               </div>
             </div>

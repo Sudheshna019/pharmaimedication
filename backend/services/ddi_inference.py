@@ -1,105 +1,84 @@
-"""DDI Inference Engine: Predict Interactions from Drug SMILES."""
+"""DDI inference: interaction detection + interaction-type prediction from chemical structure.
+
+Models (trained by ml/train_ddi.py, stored in ml_artifacts/ddi/):
+  ddi_detect_mlp.npz  P(the two drugs interact)
+  ddi_type_mlp.npz    which of the 86 DrugBank interaction types it is
+Plus a lookup of interactions recorded in the DrugBank dataset for the known drugs.
+"""
+from __future__ import annotations
+
 import json
 import logging
+from functools import lru_cache
 from pathlib import Path
-import joblib
+
 import numpy as np
-import pandas as pd
-from rdkit import Chem
-from rdkit.Chem import rdFingerprintGenerator
-from rdkit import RDLogger
 
-# Silence RDKit warnings for clean API output
-RDLogger.DisableLog('rdApp.*')
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+from backend.services.drug_normalizer import get_normalizer
+from backend.services.fingerprints import pair_features
+from backend.services.mlp_numpy import NumpyMLP
+
 LOGGER = logging.getLogger(__name__)
+ARTIFACTS = Path(__file__).resolve().parent.parent / "ml_artifacts"
+DDI_DIR = ARTIFACTS / "ddi"
+KB_DIR = ARTIFACTS / "knowledge"
 
-# Paths
-# Dynamically locate the ml_artifacts/ddi directory
-BASE_DIR = Path(__file__).resolve().parent.parent
-DDI_ARTIFACTS_DIR = BASE_DIR / "ml_artifacts" / "ddi"
+# Probability above which the detector reports an interaction
+DETECT_THRESHOLD = 0.5
 
-MODEL_PATH = DDI_ARTIFACTS_DIR / "ddi_xgboost_multiclass.pkl"
-LABEL_MAP_PATH = DDI_ARTIFACTS_DIR / "ddi_label_map.json"
-INFO_PATH = DDI_ARTIFACTS_DIR / "Interaction_information.csv"
-
-FP_SIZE = 512
-# Initialize Morgan Generator
-morgan_gen = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=FP_SIZE)
 
 class DDIInferenceEngine:
     def __init__(self):
-        LOGGER.info("Initializing DDI Inference Engine...")
-        self.model = joblib.load(MODEL_PATH)
-        
-        # Load the label map to translate XGBoost predictions back to original DDI types
-        with open(LABEL_MAP_PATH, "r") as f:
-            reverse_map_str = json.load(f)
-            self.index_to_type = {int(new): int(orig) for new, orig in reverse_map_str.items()}
-            
-        # Load the human-readable FDA interaction descriptions
-        self.interaction_info = {}
-        if INFO_PATH.exists():
-            df_info = pd.read_csv(INFO_PATH)
-            for _, row in df_info.iterrows():
-                self.interaction_info[int(row['Interaction type'])] = row['Description']
-        else:
-            LOGGER.warning(f"Info file not found at {INFO_PATH}. Descriptions will be missing.")
+        self.detector = NumpyMLP(DDI_DIR / "ddi_detect_mlp.npz")
+        self.typer = NumpyMLP(DDI_DIR / "ddi_type_mlp.npz")
+        self.types = json.loads((KB_DIR / "ddi_types.json").read_text())
+        self.known = json.loads((KB_DIR / "drugbank_known_pairs.json").read_text())
+        self.norm = get_normalizer()
+        LOGGER.info("DDI engine loaded: detector + 86-class type model, %d DrugBank-recorded pairs", len(self.known))
 
-    def _get_morgan_fingerprint(self, smiles: str) -> np.ndarray:
-        """Internal helper to convert SMILES to binary arrays."""
-        try:
-            mol = Chem.MolFromSmiles(smiles)
-            if mol is None:
-                return np.zeros(FP_SIZE, dtype=np.int8)
-            fp = morgan_gen.GetFingerprint(mol)
-            arr = np.zeros((1,), dtype=np.int8)
-            Chem.DataStructs.ConvertToNumpyArray(fp, arr)
-            return arr
-        except Exception:
-            return np.zeros(FP_SIZE, dtype=np.int8)
+    def describe(self, cls: int, drug1: str, drug2: str) -> str:
+        text = self.types[str(cls)]["description"]
+        return text.replace("#Drug1", drug1).replace("#Drug2", drug2)
 
-    def predict_interaction(self, smiles_a: str, smiles_b: str) -> dict:
-        """Predicts the interaction between two chemical structures."""
-        # 1. Canonical Sorting (Crucial to prevent A+B / B+A leakage)
-        s1, s2 = str(smiles_a).strip(), str(smiles_b).strip()
-        if s1 > s2:
-            s1, s2 = s2, s1
-            
-        # 2. Extract Features
-        fp1 = self._get_morgan_fingerprint(s1)
-        fp2 = self._get_morgan_fingerprint(s2)
-        X_input = np.concatenate([fp1, fp2]).reshape(1, -1)
-        
-        # 3. Predict using XGBoost
-        probas = self.model.predict_proba(X_input)[0]
-        pred_idx = int(np.argmax(probas))
-        confidence = float(probas[pred_idx])
-        
-        # 4. Map to human-readable explanation
-        orig_type = self.index_to_type[pred_idx]
-        description = self.interaction_info.get(orig_type, "No description available.")
-        
-        return {
-            "predicted_type": orig_type,
-            "confidence": round(confidence, 4),
-            "description": description
+    def predict_pair(self, g1: str, g2: str) -> dict | None:
+        """Predict the interaction between two generic drugs. None if a structure is missing."""
+        s1, s2 = self.norm.smiles(g1), self.norm.smiles(g2)
+        if not s1 or not s2:
+            return None
+        n1, n2 = self.norm.display_name(g1), self.norm.display_name(g2)
+
+        X = np.stack([pair_features(s1, s2), pair_features(s2, s1)])
+        p_detect = float(self.detector.predict_proba(X).mean())  # symmetric: average both orders
+        type_probs = self.typer.predict_proba(X)
+        order = int(type_probs.max(axis=1).argmax())             # direction the model is most sure about
+        cls = int(type_probs[order].argmax())
+        conf = float(type_probs[order, cls])
+        drug1, drug2 = (n1, n2) if order == 0 else (n2, n1)
+        affected = g2 if order == 0 else g1          # the drug named "#Drug2" (whose level/effect changes)
+
+        result = {
+            "interaction_probability": round(p_detect, 4),
+            "interacts": p_detect >= DETECT_THRESHOLD,
+            "predicted_type": cls,
+            "type_confidence": round(conf, 4),
+            "type_severity": self.types[str(cls)]["severity"],
+            "description": self.describe(cls, drug1, drug2),
+            "affected_drug": affected,
+            "known_in_drugbank": False,
         }
 
-if __name__ == "__main__":
-    engine = DDIInferenceEngine()
-    
-    # Test with the exact SMILES strings from your DDI Audit
-    test_smiles_1 = "CC1=CC2=CC3=C(OC(=O)C=C3C)C(C)=C2O1"
-    test_smiles_2 = "COC(=O)CCC1=C2NC(\\C=C3/N=C(/C=C4\\N\\C(=C/C5=N/C(=C\\2)/C(CCC(O)=O)=C5C)C(C=C)=C4C)C2=CC=C([C@@H](C(=O)OC)[C@@]32C)C(=O)OC)=C1C"
-    
-    LOGGER.info("Running test prediction...")
-    result = engine.predict_interaction(test_smiles_1, test_smiles_2)
-    
-    print("\n" + "="*50)
-    print("⚕️  DDI PREDICTION RESULT")
-    print("="*50)
-    print(f"Interaction Type : Type {result['predicted_type']}")
-    print(f"Model Confidence : {result['confidence']*100:.2f}%")
-    print(f"Clinical Warning : {result['description']}")
-    print("="*50 + "\n")
+        db1, db2 = self.norm.drugbank_id(g1), self.norm.drugbank_id(g2)
+        if db1 and db2:
+            for a, b, na, nb, gb in ((db1, db2, n1, n2, g2), (db2, db1, n2, n1, g1)):
+                known_type = self.known.get(f"{a}|{b}")
+                if known_type is not None:
+                    result.update(known_in_drugbank=True, known_type=known_type, known_affected_drug=gb,
+                                  known_severity=self.types[str(known_type)]["severity"],
+                                  known_description=self.describe(known_type, na, nb))
+                    break
+        return result
+
+
+@lru_cache(maxsize=1)
+def get_ddi_engine() -> DDIInferenceEngine:
+    return DDIInferenceEngine()

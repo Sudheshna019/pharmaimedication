@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   PieChart, 
   Pie, 
@@ -25,6 +25,7 @@ import {
   Clock
 } from 'lucide-react';
 import { AnalysisResult } from '../types';
+import { apiService } from '../api/client';
 
 interface DashboardViewProps {
   history: AnalysisResult[];
@@ -41,29 +42,42 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Risk Distribution Data
   const riskDistributionData = [
-    { name: 'Critical Risk', value: history.filter((h) => h.overallRiskLevel === 'Critical').length + 2, color: '#ef4444' },
-    { name: 'High Risk', value: history.filter((h) => h.overallRiskLevel === 'High').length + 4, color: '#f97316' },
-    { name: 'Moderate Risk', value: history.filter((h) => h.overallRiskLevel === 'Medium').length + 5, color: '#eab308' },
-    { name: 'Low Risk', value: history.filter((h) => h.overallRiskLevel === 'Low').length + 12, color: '#10b981' }
+    { name: 'Critical Risk', value: history.filter((h) => h.overallRiskLevel === 'Critical').length, color: '#ef4444' },
+    { name: 'High Risk', value: history.filter((h) => h.overallRiskLevel === 'High').length, color: '#f97316' },
+    { name: 'Moderate Risk', value: history.filter((h) => h.overallRiskLevel === 'Medium').length, color: '#eab308' },
+    { name: 'Low Risk', value: history.filter((h) => h.overallRiskLevel === 'Low').length, color: '#10b981' }
   ];
 
-  // ML Models Benchmark Data
-  const modelBenchmarkData = [
-    { model: 'AWS Textract OCR', accuracy: 98.6, latency: '420ms' },
-    { model: 'DrugBank KB v5.1', accuracy: 99.9, latency: '110ms' },
-    { model: 'XGBoost Predictor', accuracy: 96.5, latency: '280ms' },
-    { model: 'Random Forest', accuracy: 94.2, latency: '310ms' },
-    { model: 'Deep Neural Net (MLP)', accuracy: 95.8, latency: '350ms' }
-  ];
+  // Real held-out test scores of the trained models
+  const [modelBenchmarkData, setModelBenchmarkData] = useState<{ model: string; accuracy: number; latency: string }[]>([]);
+  useEffect(() => {
+    apiService.getModelMetrics().then((res) => {
+      const d = res?.data;
+      if (!d) return;
+      setModelBenchmarkData([
+        { model: 'Old XGBoost DDI', accuracy: +(d.ddi_type_model.previous_xgboost_baseline.test_accuracy * 100).toFixed(1), latency: '' },
+        { model: 'DDI Type MLP', accuracy: +(d.ddi_type_model.test_accuracy * 100).toFixed(1), latency: '' },
+        { model: 'DDI Detector MLP', accuracy: +(d.ddi_detection_model.test_accuracy * 100).toFixed(1), latency: '' },
+        { model: 'ADR XGBoost (AUC)', accuracy: +(d.adr_model.macro_test_roc_auc * 100).toFixed(1), latency: '' }
+      ]);
+    }).catch(() => setModelBenchmarkData([]));
+  }, []);
 
-  // Interaction Categories Data
-  const categoryData = [
-    { category: 'Pharmacodynamic Synergy', count: 18 },
-    { category: 'CYP450 Enzyme Inhibition', count: 14 },
-    { category: 'Renal Clearance Delay', count: 9 },
-    { category: 'QT Interval Prolongation', count: 6 },
-    { category: 'Platelet Inactivation', count: 12 }
-  ];
+  const interactionsFound = history.reduce((n, h) => n + (h.drugInteractions?.length || 0), 0);
+  const last24h = history.filter((h) => Date.now() - new Date(h.timestamp).getTime() < 86400000).length;
+  const scored = history.filter((h) => typeof h.overallConfidenceScore === 'number' && h.overallConfidenceScore > 0);
+  const avgConfidence = scored.length ? scored.reduce((n, h) => n + h.overallConfidenceScore, 0) / scored.length : 0;
+
+  // Interaction Categories Data (from this user's analyses)
+  const categoryCounts: Record<string, number> = {};
+  history.forEach((h) => (h.drugInteractions || []).forEach((i) => {
+    const key = (i.biochemicalPathway || i.mechanism || 'Other').slice(0, 40);
+    categoryCounts[key] = (categoryCounts[key] || 0) + 1;
+  }));
+  const categoryData = Object.entries(categoryCounts)
+    .map(([category, count]) => ({ category, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
 
   const filteredHistory = history.filter(
     (item) =>
@@ -100,15 +114,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-[#1565C0] p-6 rounded-3xl shadow-lg shadow-blue-200 text-white flex flex-col justify-between">
           <p className="text-xs font-bold uppercase tracking-wider opacity-80">Active Analysis</p>
-          <h3 className="text-4xl font-black my-2 font-poppins">1,248</h3>
+          <h3 className="text-4xl font-black my-2 font-poppins">{history.length.toLocaleString()}</h3>
           <p className="text-xs font-semibold opacity-90 flex items-center gap-1">
-            <ArrowUpRight className="w-3.5 h-3.5" /> +14.2% this week
+            <ArrowUpRight className="w-3.5 h-3.5" /> Saved analyses
           </p>
         </div>
 
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Interactions Detected</p>
-          <h3 className="text-4xl font-black my-2 text-red-500 font-poppins">084</h3>
+          <h3 className="text-4xl font-black my-2 text-red-500 font-poppins">{String(interactionsFound).padStart(3, '0')}</h3>
           <div className="flex items-center gap-1 text-red-600">
             <span className="text-[10px] font-black uppercase bg-red-100 text-red-600 px-2 py-0.5 rounded">Critical Risk</span>
           </div>
@@ -116,14 +130,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Reports Generated</p>
-          <h3 className="text-4xl font-black my-2 text-slate-800 font-poppins">4,812</h3>
+          <h3 className="text-4xl font-black my-2 text-slate-800 font-poppins">{last24h.toLocaleString()}</h3>
           <p className="text-xs text-slate-400 font-medium">Last 24 hours</p>
         </div>
 
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">ML Model Confidence</p>
-          <h3 className="text-4xl font-black my-2 text-emerald-600 font-poppins">98.4%</h3>
-          <p className="text-xs text-emerald-600 font-bold">XGBoost + SHAP Ensemble</p>
+          <h3 className="text-4xl font-black my-2 text-emerald-600 font-poppins">{(avgConfidence * 100).toFixed(1)}%</h3>
+          <p className="text-xs text-emerald-600 font-bold">MLP + XGBoost Models</p>
         </div>
       </div>
 
@@ -172,7 +186,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={modelBenchmarkData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <XAxis dataKey="model" tick={{ fontSize: 10, fontWeight: 700 }} />
-                <YAxis domain={[90, 100]} tick={{ fontSize: 10 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
                 <Tooltip />
                 <Bar dataKey="accuracy" fill="#1565C0" radius={[8, 8, 0, 0]} />
               </BarChart>

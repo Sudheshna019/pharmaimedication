@@ -1,0 +1,14 @@
+{
+  "model": "MLP (2048-1024-512-1) on Morgan r=2 1024-bit fingerprints",
+  "dataset": "all_ddi_data.csv (interacting vs non-interacting drug pairs), random 80/10/10 split",
+  "n_train": 474176,
+  "n_validation": 59272,
+  "n_test": 59272,
+  "test_accuracy": 0.920670805776758,
+  "test_roc_auc": 0.9663590530316758,
+  "test_pr_auc": 0.983742700493018,
+  "test_f1": 0.9444102903622434,
+  "test_precision": 0.9308954458583881,
+  "test_recall": 0.9583233360525937,
+  "threshold": 0.5
+}

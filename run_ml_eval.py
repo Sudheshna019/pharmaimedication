@@ -1,207 +1,222 @@
 """
-================================================================================
-          PharmAI: ML Model Evaluation & Terminal Demonstration Script
-================================================================================
-Run Command:
-   python run_ml_eval.py
+PharmAI - live model evaluation and inference demo (for the project review).
 
-Description:
-   Executes live evaluation metrics, dataset balance analysis, and instant DDI/ADR
-   predictions directly in the terminal for academic presentation and reviewer demo.
-================================================================================
+Everything printed here is computed now from the saved models:
+  1. re-evaluates the DDI models on the held-out DrugBank test set
+  2. re-evaluates the ADR models on the held-out FAERS test split
+  3. runs the full prediction pipeline on example prescriptions
+
+Run from the project root:
+    backend\\.venv\\Scripts\\python run_ml_eval.py        (Windows)
+    backend/.venv/bin/python run_ml_eval.py             (Linux / macOS)
+
+The raw datasets are read from TRAINING_DATA_DIR (default: the local training folder).
+If they are not available, the stored test metrics are shown instead.
 """
-
-import os
+import ast
+import csv
 import json
+import os
+import sys
 import time
+from pathlib import Path
 
-def load_ml_metrics():
-    eval_path = os.path.join("backend", "ml_artifacts", "ddi", "ddi_test_evaluation.json")
-    if os.path.exists(eval_path):
-        with open(eval_path, "r") as f:
-            return json.load(f)
-    return None
+import numpy as np
 
-def print_header(title):
-    print("\n" + "="*80)
-    print(f" {title.center(78)} ")
-    print("="*80)
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
 
-def show_dataset_sources():
-    print_header("1. DATASET DIMENSIONS, ROWS & COLUMNS SPECIFICATION")
-    print("""
-    [A] EVALUATED DDI TEST DATASET MATRIX:
-        - Total Rows (Samples)  : 38,337 Drug Interaction Pairings
-        - Total Columns         : 8 Clinical & Chemical Feature Columns
-        - Column Schema:
-          1. Drug1_ID (SMILES / DB Accession ID)
-          2. Drug2_ID (SMILES / DB Accession ID)
-          3. Patient_Age (Numerical: 18 - 88 Yrs)
-          4. Patient_Gender (Categorical: Male / Female)
-          5. Patient_eGFR (Renal Function: 15 - 120 mL/min/1.73m²)
-          6. DDI_Mechanism_Class (Target Label: Class 0 to 85)
-          7. Severity_Level (Classification: Low, Medium, High, Critical)
-          8. ADR_Incidence_Rate (FAERS / SIDER Adverse Frequency %)
+from backend.services.adr_features import TARGETS, categories_of, featurize  # noqa: E402
+from backend.services.adr_inference import get_adr_engine  # noqa: E402
+from backend.services.ddi_inference import get_ddi_engine  # noqa: E402
+from backend.services.drug_normalizer import get_normalizer  # noqa: E402
+from backend.services.fingerprints import pair_features  # noqa: E402
 
-    [B] DDI ONTOLOGY SCHEMA FILE (backend/ml_artifacts/ddi/Interaction_information.csv):
-        - Total Rows (Classes)  : 87 Rows (1 Header + 86 Mechanism Categories)
-        - Total Columns         : 4 Columns (Interaction_type, Description, Subject, DDI_type)
+RAW = Path(os.getenv("TRAINING_DATA_DIR", "C:/Users/91970/Desktop/training/data/raw"))
+FAERS = Path(os.getenv("FAERS_FEATURES_CSV", str(RAW.parent / "processed" / "features_dataset.csv")))
+ART = ROOT / "backend" / "ml_artifacts"
 
-    [C] OPEN PUBLIC DATASETS (FAERS & SIDER DIMENSIONS):
-        1. FDA FAERS (2025 Q3 Release):
-           - Total Rows    : 1,250,000+ Patient Safety Event Reports
-           - Total Columns : 7 Columns (PrimaryID, DrugName, MedDRA_Term, Outcome, Age, Sex, Reaction_Freq)
-        2. SIDER 4.1 (Side Effect Resource):
-           - Total Rows    : 139,756 Side-Effect Frequency Rows
-           - Total Columns : 6 Columns (STITCH_ID, UMLS_ID, Side_Effect_Name, Frequency_Tier, Frequency_%)
-        3. BioSNAP DDI Benchmark (DrugBank v5.1 & PubChem):
-           - Total Rows    : 38,337 Evaluated Test Samples
-           - Total Columns : 8 Feature Columns
-    """)
 
-    csv_path = os.path.join("backend", "ml_artifacts", "ddi", "Interaction_information.csv")
-    if os.path.exists(csv_path):
-        print("    LIVE DATASET CSV PREVIEW (backend/ml_artifacts/ddi/Interaction_information.csv):")
-        print("    " + "-"*72)
-        with open(csv_path, "r", encoding="utf-8") as f:
-            lines = [line.strip() for line in f.readlines()[:10]]
-            for l in lines:
-                print(f"    | {l[:70]}")
-        print("    " + "-"*72)
+def header(title):
+    print("\n" + "=" * 78 + f"\n {title}\n" + "=" * 78)
 
-def show_dataset_balance_demo(data):
-    print_header("2. DATASET ANALYSIS: IMBALANCED VS BALANCED WEIGHTING")
-    
-    imb_csv = os.path.join("data", "ddi_imbalanced_dataset_sample.csv")
-    bal_csv = os.path.join("data", "ddi_balanced_dataset_sample.csv")
 
-    if os.path.exists(imb_csv):
-        print("    [A] RAW IMBALANCED DATASET (data/ddi_imbalanced_dataset_sample.csv):")
-        print("    " + "-"*76)
-        with open(imb_csv, "r", encoding="utf-8") as f:
-            for line in list(f.readlines())[:8]:
-                print(f"    | {line.strip()[:74]}")
-        print("    " + "-"*76)
+def roc_auc(y, p):
+    """ROC-AUC via the Mann-Whitney rank statistic (no sklearn needed)."""
+    y, p = np.asarray(y), np.asarray(p)
+    _, inverse, counts = np.unique(p, return_inverse=True, return_counts=True)
+    upper = np.cumsum(counts)                         # tied scores share their average rank
+    ranks = (upper - (counts - 1) / 2.0)[inverse]
+    n_pos, n_neg = y.sum(), len(y) - y.sum()
+    return (ranks[y == 1].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg)
 
-    if os.path.exists(bal_csv):
-        print("\n    [B] BALANCED DATASET AFTER WEIGHTED SAMPLING & SMOTE (data/ddi_balanced_dataset_sample.csv):")
-        print("    " + "-"*76)
-        with open(bal_csv, "r", encoding="utf-8") as f:
-            for line in list(f.readlines())[:8]:
-                print(f"    | {line.strip()[:74]}")
-        print("    " + "-"*76)
 
-    print("""
-    CLASS BALANCING FORMULA & MATHEMATICAL RATIONALE:
-    ----------------------------------------------------------------------------
-    - Inverse Class Weight Formula: W_k = N / (K * N_k)
-      * Majority Class (#25) Weight = 38337 / (86 * 12149) = 0.036 (Lower penalty)
-      * Rare Class (#42) Weight     = 38337 / (86 * 18)    = 24.76 (24.7x Penalty!)
-    - Result: Enforces high loss penalty on misclassifying rare high-risk DDIs,
-      preventing the model from defaulting only to majority classes.
-    """)
+def average_precision(y, p):
+    """PR-AUC (average precision), same definition as sklearn."""
+    order = np.argsort(-np.asarray(p), kind="mergesort")
+    y = np.asarray(y)[order]
+    tp = np.cumsum(y)
+    precision = tp / np.arange(1, len(y) + 1)
+    return float((precision * y).sum() / max(y.sum(), 1))
 
-def show_model_accuracy(data):
-    print_header("3. STANDALONE ML MODEL VS HYBRID SYSTEM ACCURACY")
-    
-    if data and "weighted avg" in data:
-        w_avg = data["weighted avg"]
-        acc = data.get("accuracy", 0.7741)
-        prec = w_avg.get("precision", 0.7804)
-        rec = w_avg.get("recall", 0.7741)
-        f1 = w_avg.get("f1-score", 0.7694)
-        support = int(w_avg.get("support", 38337))
+
+def prf(y, pred):
+    """Precision, recall, F1 for binary 0/1 labels."""
+    tp = int(np.sum((pred == 1) & (y == 1)))
+    fp = int(np.sum((pred == 1) & (y == 0)))
+    fn = int(np.sum((pred == 0) & (y == 1)))
+    precision = tp / (tp + fp) if tp + fp else 0.0
+    recall = tp / (tp + fn) if tp + fn else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+    return precision, recall, f1
+
+
+def multiclass_report(y, pred):
+    """Accuracy + macro / weighted precision, recall, F1 over all classes present in y."""
+    rows = []
+    for c in np.unique(y):
+        p_, r_, f_ = prf((y == c).astype(int), (pred == c).astype(int))
+        rows.append((int(c), p_, r_, f_, int(np.sum(y == c))))
+    support = np.array([r[4] for r in rows])
+    arr = np.array([[r[1], r[2], r[3]] for r in rows])
+    return {
+        "accuracy": float((pred == y).mean()),
+        "macro": arr.mean(axis=0),
+        "weighted": (arr * support[:, None]).sum(axis=0) / support.sum(),
+        "per_class": rows,
+    }
+
+
+def batched_predict(model, pairs, batch=5000):
+    out = []
+    for i in range(0, len(pairs), batch):
+        X = np.stack([pair_features(a, b) for a, b in pairs[i:i + batch]])
+        out.append(model.predict_proba(X))
+    return np.concatenate(out)
+
+
+def eval_ddi():
+    header("1. DRUG-DRUG INTERACTION (DDI) MODELS")
+    test = RAW / "DDi" / "drugbank_test (1).csv"
+    stored = json.loads((ART / "ddi" / "ddi_type_metrics.json").read_text())
+    detect = json.loads((ART / "ddi" / "ddi_detect_metrics.json").read_text())
+    base = stored["previous_xgboost_baseline"]
+    engine = get_ddi_engine()
+
+    print("\n  (a) Interaction-TYPE classifier - MLP, 86 DrugBank interaction types")
+    if not test.exists():
+        print(f"      raw data not found at {test} - stored test results:")
+        print(f"      accuracy {stored['test_accuracy'] * 100:.2f}%   macro F1 {stored['test_macro_f1']:.4f}")
     else:
-        acc, prec, rec, f1, support = 0.7741, 0.7804, 0.7741, 0.7694, 38337
+        with open(test, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        t0 = time.time()
+        pred = batched_predict(engine.typer, [(r["smiles1"], r["smiles2"]) for r in rows]).argmax(1)
+        y = np.array([int(r["type"]) for r in rows])
+        rep = multiclass_report(y, pred)
+        print(f"      test pairs          : {len(rows):,}   (computed now in {time.time() - t0:.1f} s)")
+        print(f"      ACCURACY            : {rep['accuracy'] * 100:.2f}%")
+        print(f"      macro    precision {rep['macro'][0]:.4f}   recall {rep['macro'][1]:.4f}   F1 {rep['macro'][2]:.4f}")
+        print(f"      weighted precision {rep['weighted'][0]:.4f}   recall {rep['weighted'][1]:.4f}   F1 {rep['weighted'][2]:.4f}")
+        print("      5 largest classes:")
+        for c, p_, r_, f_, n in sorted(rep["per_class"], key=lambda r: -r[4])[:5]:
+            print(f"        class {c:2d}  support {n:6,}   precision {p_:.3f}  recall {r_:.3f}  F1 {f_:.3f}")
+    print(f"      previous XGBoost model: accuracy {base['test_accuracy'] * 100:.2f}%   macro F1 {base['test_macro_f1']:.4f}")
 
-    print(f"""
-    STANDALONE XGBOOST ML MODEL PERFORMANCE (38,337 TEST SAMPLES):
-    ----------------------------------------------------------------------------
-    - Test Sample Support : {support:,} DDI Pairings
-    - Model Accuracy      : {acc*100:.2f}%
-    - Weighted Precision  : {prec*100:.2f}%
-    - Weighted Recall     : {rec*100:.2f}%
-    - Weighted F1-Score   : {f1*100:.2f}%
-    ----------------------------------------------------------------------------
+    print("\n  (b) Interaction DETECTOR - MLP, 'do these two drugs interact?' (yes / no)")
+    all_ddi = RAW / "DDi" / "all_ddi_data.csv"
+    if not all_ddi.exists():
+        print(f"      raw data not found - stored test results: accuracy {detect['test_accuracy'] * 100:.2f}%  "
+              f"F1 {detect['test_f1']:.4f}  ROC-AUC {detect['test_roc_auc']:.4f}")
+        return
+    t0 = time.time()
+    seen, data = set(), []
+    with open(all_ddi, newline="", encoding="utf-8") as f:
+        for r in csv.DictReader(f):                       # same cleaning + split as ml/train_ddi.py
+            if not (r["label"] and r["smiles_1"] and r["smiles_2"]):
+                continue
+            key = (r["smiles_1"], r["smiles_2"])
+            if key in seen:
+                continue
+            seen.add(key)
+            data.append((r["smiles_1"], r["smiles_2"], int(float(r["label"]))))
+    perm = np.random.default_rng(42).permutation(len(data))
+    te = [data[i] for i in perm[: int(0.1 * len(data))]]
+    prob = batched_predict(engine.detector, [(a, b) for a, b, _ in te])
+    y = np.array([l for _, _, l in te])
+    pred = (prob >= 0.5).astype(int)
+    p_, r_, f_ = prf(y, pred)
+    print(f"      test pairs          : {len(te):,}   (computed now in {time.time() - t0:.1f} s)")
+    print(f"      ACCURACY            : {(pred == y).mean() * 100:.2f}%")
+    print(f"      precision {p_:.4f}   recall {r_:.4f}   F1 {f_:.4f}")
+    print(f"      ROC-AUC {roc_auc(y, prob):.4f}   PR-AUC {average_precision(y, prob):.4f}")
 
-    HYBRID PHARMAI-CDSS SYSTEM PERFORMANCE (ML + DETERMINISTIC GUARDRAILS):
-    ----------------------------------------------------------------------------
-    - Overall System CDSS Accuracy : 91.40%  (Boosted by Safety Overrides)
-    - Critical DDI Safety Recall   : 100.00% (ZERO False Negatives on Lethal Pairs)
-    - Average Inference Latency    : 510 ms
-    - SHAP Explainability Coverage : 100%
-    ----------------------------------------------------------------------------
-    """)
 
-def run_live_inference_demo():
-    print_header("4. LIVE TERMINAL MODEL INFERENCE DEMO")
-    
-    test_cases = [
-        {
-            "pair": ("Warfarin (5mg)", "Aspirin (81mg)"),
-            "patient": {"age": 72, "gender": "Female", "egfr": 58},
-            "expected_risk": "CRITICAL RISK",
-            "mechanism": "Dual Pathway Hemostasis Blockade (VKORC1 + COX-1 Suppression)",
-            "side_effects": "Gastrointestinal Hemorrhage (14.2% FAERS incidence)",
-            "recommendation": "Re-evaluate aspirin indication. Add Pantoprazole 40mg for stomach protection."
-        },
-        {
-            "pair": ("Paracetamol (650mg)", "Rantac (150mg)"),
-            "patient": {"age": 45, "gender": "Male", "egfr": 90},
-            "expected_risk": "LOW RISK",
-            "mechanism": "No adverse chemical interaction detected. Compatible pathways.",
-            "side_effects": "Mild headache (2.1% SIDER incidence)",
-            "recommendation": "Administer as prescribed on label."
-        },
-        {
-            "pair": ("Aspirin (81mg)", "Aspirin (325mg)"),
-            "patient": {"age": 60, "gender": "Male", "egfr": 75},
-            "expected_risk": "CRITICAL RISK (DUPLICATE MEDICATION)",
-            "mechanism": "Therapeutic Duplication & Accidental Overdosage Risk",
-            "side_effects": "Gastric Mucosal Ulceration & Salicylate Toxicity",
-            "recommendation": "Discontinue duplicate formulation immediately."
-        }
+def eval_adr():
+    header("2. ADVERSE DRUG REACTION (ADR) MODELS - 8 XGBoost classifiers")
+    metrics = json.loads((ART / "adr" / "adr_metrics.json").read_text())
+    if not FAERS.exists():
+        print(f"  (FAERS data not found at {FAERS} - showing stored test metrics)")
+        for t, m in metrics["per_target"].items():
+            print(f"  {t:22s} ROC-AUC {m['test_roc_auc']:.3f}  F1 {m['test_f1']:.3f}")
+        return
+    engine, norm = get_adr_engine(), get_normalizer()
+    with open(FAERS, newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    parse = lambda s: [str(x).strip().lower() for x in ast.literal_eval(s)] if s.startswith("[") else []
+    drugs = [sorted({g for raw in parse(r["drug_names"]) for g in norm.normalize_faers(raw)}) for r in rows]
+    Y = np.array([[int(t in categories_of(parse(r["reaction_list"]))) for t in TARGETS] for r in rows])
+    X = np.stack([featurize(float(r["patient_age"] or 0), r["biological_sex"].lower(), d, engine.spec, norm.drug_class)
+                  for r, d in zip(rows, drugs)])
+    perm = np.random.default_rng(42).permutation(len(rows))      # same split as ml/train_adr.py
+    te = perm[: int(0.15 * len(rows))]
+    import xgboost as xgb
+    dm = xgb.DMatrix(X[te])
+    print(f"  Test reports: {len(te):,} FAERS reports (never used in training)\n")
+    names = ["ROC-AUC", "PR-AUC", "Precis.", "Recall", "F1", "Accur."]
+    print(f"  {'ADR category':20s}" + "".join(f"{n:>9s}" for n in names) + f"{'old AUC':>9s}")
+    cols = []
+    for j, t in enumerate(TARGETS):
+        prob = engine.boosters[t].predict(dm)
+        y = Y[te, j]
+        pred = (prob >= engine.thresholds[t]).astype(int)
+        p_, r_, f_ = prf(y, pred)
+        vals = [roc_auc(y, prob), average_precision(y, prob), p_, r_, f_, float((pred == y).mean())]
+        cols.append(vals)
+        old = metrics["per_target"][t]["previous_model_test_roc_auc"]
+        print(f"  {t[4:]:20s}" + "".join(f"{v:9.3f}" for v in vals) + f"{old:9.3f}")
+    m = np.mean(cols, axis=0)
+    print(f"  {'MACRO AVERAGE':20s}" + "".join(f"{v:9.3f}" for v in m)
+          + f"{metrics['previous_model_macro_test_roc_auc']:9.3f}")
+    print("\n  Note: accuracy looks high because most reports do not contain a given reaction;")
+    print("  ROC-AUC and F1 are the meaningful measures for these rare, imbalanced outcomes.")
+
+
+def demo():
+    header("3. LIVE PREDICTIONS ON EXAMPLE PRESCRIPTIONS")
+    from backend.routers.analysis import PredictRequest, predict_interaction_risk
+    cases = [
+        ("Warfarin + Aspirin (72 y, F)", 72, "Female", ["Warfarin 5mg", "Aspirin 81mg"]),
+        ("Combiflam + Pantocid (49 y, F)", 49, "Female", ["Combiflam", "Pantocid 40mg"]),
+        ("Dolo 650 + Combiflam - duplicate paracetamol", 30, "Male", ["Dolo 650", "Combiflam"]),
+        ("Montelukast + Cetirizine (35 y, F)", 35, "Female", ["Montelukast 10mg", "Cetirizine 10mg"]),
     ]
+    for title, age, sex, meds in cases:
+        req = PredictRequest(patientData={"age": age, "gender": sex},
+                             medications=[{"name": m} for m in meds])
+        d = predict_interaction_risk(req)["data"]
+        print(f"\n  {title}\n  -> overall risk: {d['overallRiskLevel']}")
+        for x in d["drugInteractions"]:
+            p = x["evidence"]["mlInteractionProbability"]
+            print(f"     [{x['severity']}] {x['med1']} + {x['med2']}  ({x['evidence']['source']}"
+                  f"{'' if p is None else f', ML p={p:.3f}'})")
+        flagged = [f"{r['label']} {r['probability'] * 100:.1f}%" for r in d["adrPredictions"].values() if r["flagged"]]
+        print(f"     ADR flagged: {', '.join(flagged) or 'none'}")
 
-    for idx, test in enumerate(test_cases, 1):
-        print(f"\n[Test Case {idx}] Testing Drug Pair: {test['pair'][0]} + {test['pair'][1]}")
-        print(f"            Patient Profile: Age {test['patient']['age']}, Gender {test['patient']['gender']}, eGFR {test['patient']['egfr']} mL/min")
-        print("            Executing XGBoost Inference & Hybrid Safety Engine...")
-        time.sleep(0.4)
-        print(f"            --> RESULT: {test['expected_risk']}")
-        print(f"            --> Mechanism    : {test['mechanism']}")
-        print(f"            --> Side Effects : {test['side_effects']}")
-        print(f"            --> Action Rec   : {test['recommendation']}")
-        print(f"            --> Confidence   : 96.0% (Optimal)")
-        print("-" * 76)
-
-def show_drugbank_pairs_demo():
-    print_header("5. DRUGBANK ACCESSION ID PAIRS INSPECTION (23 REAL TEST SAMPLES)")
-    pair_csv = os.path.join("data", "ddi_drugbank_pairs_sample.csv")
-    if os.path.exists(pair_csv):
-        print("    LIVE DRUGBANK ACCESSION PAIRS FILE (data/ddi_drugbank_pairs_sample.csv):")
-        print("    " + "-"*76)
-        with open(pair_csv, "r", encoding="utf-8") as f:
-            for line in list(f.readlines())[:12]:
-                print(f"    | {line.strip()[:74]}")
-        print("    " + "-"*76)
-
-def main():
-    print("\n" + "#"*80)
-    print("#  PHARMAI: AI-BASED DRUG INTERACTION & SIDE EFFECT PREDICTION SYSTEM       #")
-    print("#  ML EVALUATION & TERMINAL PRESENTATION DEMO                                 #")
-    print("#"*80)
-    
-    data = load_ml_metrics()
-    show_dataset_sources()
-    show_dataset_balance_demo(data)
-    show_model_accuracy(data)
-    show_drugbank_pairs_demo()
-    run_live_inference_demo()
-
-    print("\n" + "="*80)
-    print(" DEMO COMPLETE: 0 ERRORS | READY FOR IEEE PRESENTATION & REVIEW")
-    print("="*80 + "\n")
 
 if __name__ == "__main__":
-    main()
+    print("#" * 78 + "\n#  PharmAI - drug interaction & adverse reaction prediction: live evaluation\n" + "#" * 78)
+    eval_ddi()
+    eval_adr()
+    demo()
+    print()

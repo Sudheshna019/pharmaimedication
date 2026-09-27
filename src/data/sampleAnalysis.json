@@ -1,0 +1,416 @@
+{
+ "_note": "Real output of the ML pipeline for the demo prescription (Warfarin, Aspirin, Lisinopril, Metformin; 72-year-old female, eGFR 58). Used only as the offline fallback of the demo button.",
+ "demoRequest": {
+  "patientData": {
+   "age": 72,
+   "gender": "Female",
+   "egfr": 58
+  },
+  "medications": [
+   {
+    "id": "med-1",
+    "name": "Warfarin",
+    "dosage": "5mg",
+    "frequency": "Once daily at bedtime"
+   },
+   {
+    "id": "med-2",
+    "name": "Aspirin",
+    "dosage": "81mg",
+    "frequency": "Once daily (morning)"
+   },
+   {
+    "id": "med-3",
+    "name": "Lisinopril",
+    "dosage": "20mg",
+    "frequency": "Once daily"
+   },
+   {
+    "id": "med-4",
+    "name": "Metformin",
+    "dosage": "1000mg",
+    "frequency": "Twice daily with meals"
+   }
+  ]
+ },
+ "result": {
+  "id": "DEMO-0001",
+  "overallRiskLevel": "Critical",
+  "overallConfidenceScore": 0.95,
+  "detectedMedicines": [
+   {
+    "id": "med-1",
+    "name": "Warfarin",
+    "originalName": "Warfarin",
+    "dosage": "5mg",
+    "frequency": "Once daily at bedtime",
+    "route": "Oral",
+    "isVerified": true,
+    "matchType": "generic",
+    "ingredients": [
+     "Warfarin"
+    ],
+    "category": "Anticoagulant",
+    "sourceDB": "DrugBank DB00682"
+   },
+   {
+    "id": "med-2",
+    "name": "Aspirin",
+    "originalName": "Aspirin",
+    "dosage": "81mg",
+    "frequency": "Once daily (morning)",
+    "route": "Oral",
+    "isVerified": true,
+    "matchType": "generic",
+    "ingredients": [
+     "Aspirin"
+    ],
+    "category": "Antiplatelet",
+    "sourceDB": "DrugBank DB00945"
+   },
+   {
+    "id": "med-3",
+    "name": "Lisinopril",
+    "originalName": "Lisinopril",
+    "dosage": "20mg",
+    "frequency": "Once daily",
+    "route": "Oral",
+    "isVerified": true,
+    "matchType": "generic",
+    "ingredients": [
+     "Lisinopril"
+    ],
+    "category": "Ace Inhibitor",
+    "sourceDB": "DrugBank DB00722"
+   },
+   {
+    "id": "med-4",
+    "name": "Metformin",
+    "originalName": "Metformin",
+    "dosage": "1000mg",
+    "frequency": "Twice daily with meals",
+    "route": "Oral",
+    "isVerified": true,
+    "matchType": "generic",
+    "ingredients": [
+     "Metformin"
+    ],
+    "category": "Biguanide",
+    "sourceDB": "DrugBank DB00331"
+   }
+  ],
+  "drugInteractions": [
+   {
+    "med1": "Warfarin",
+    "med2": "Aspirin",
+    "severity": "Critical",
+    "description": "Combining Warfarin with Aspirin markedly increases the risk of serious internal and gastrointestinal bleeding.",
+    "mechanism": "Dual pathway hemostasis blockade (clotting factors + platelets)",
+    "biochemicalPathway": "Dual pathway hemostasis blockade (clotting factors + platelets)",
+    "whyReactionHappens": "Warfarin reduces clotting factors made by the liver, while Aspirin stops platelets from sticking together. With both safety nets switched off, bleeding risk multiplies.",
+    "symptomsToWatch": [
+     "Black or tarry stools",
+     "Vomiting blood or coffee-ground material",
+     "Unexplained large bruises",
+     "Blood in urine"
+    ],
+    "clinicalRecommendation": "Re-evaluate whether both are required. If combined therapy is essential, monitor INR/bleeding closely and add gastric protection (e.g. pantoprazole).",
+    "saferAlternative": "Discuss with the cardiologist whether anticoagulation alone is sufficient.",
+    "confidenceScore": 1.0,
+    "evidence": {
+     "source": "Curated clinical rule",
+     "curatedRule": true,
+     "drugbankRecorded": true,
+     "drugbankDescription": "Aspirin may increase the anticoagulant activities of Warfarin.",
+     "mlInteractionProbability": 1.0,
+     "mlPredictedType": 45,
+     "mlTypeDescription": "Aspirin may increase the anticoagulant activities of Warfarin.",
+     "mlTypeConfidence": 0.9997
+    }
+   },
+   {
+    "med1": "Warfarin",
+    "med2": "Lisinopril",
+    "severity": "Low",
+    "description": "Warfarin may decrease the antihypertensive activities of Lisinopril.",
+    "mechanism": "Interaction type: Warfarin may decrease the antihypertensive activities of Lisinopril.",
+    "biochemicalPathway": "Pharmacodynamic interaction (changes drug effects)",
+    "whyReactionHappens": "The structure-based model predicts that warfarin may decrease the antihypertensive activities of Lisinopril.",
+    "symptomsToWatch": [
+     "Increased side effects of either medicine",
+     "Reduced effect of either medicine"
+    ],
+    "clinicalRecommendation": "Usually minor - no change needed in most patients; monitor for reduced effect or extra side effects.",
+    "saferAlternative": "Discuss dose spacing or a therapeutic alternative with the prescriber.",
+    "confidenceScore": 0.9865,
+    "evidence": {
+     "source": "ML prediction (unconfirmed)",
+     "curatedRule": false,
+     "drugbankRecorded": false,
+     "drugbankDescription": null,
+     "mlInteractionProbability": 0.9865,
+     "mlPredictedType": 34,
+     "mlTypeDescription": "Warfarin may decrease the antihypertensive activities of Lisinopril.",
+     "mlTypeConfidence": 0.9991
+    }
+   },
+   {
+    "med1": "Aspirin",
+    "med2": "Lisinopril",
+    "severity": "Low",
+    "description": "Aspirin may decrease the antihypertensive activities of Lisinopril.",
+    "mechanism": "Interaction type: Aspirin may decrease the antihypertensive activities of Lisinopril.",
+    "biochemicalPathway": "Pharmacodynamic interaction (changes drug effects)",
+    "whyReactionHappens": "The structure-based model and the DrugBank record indicate that aspirin may decrease the antihypertensive activities of Lisinopril.",
+    "symptomsToWatch": [
+     "Increased side effects of either medicine",
+     "Reduced effect of either medicine"
+    ],
+    "clinicalRecommendation": "Usually minor - no change needed in most patients; monitor for reduced effect or extra side effects.",
+    "saferAlternative": "Discuss dose spacing or a therapeutic alternative with the prescriber.",
+    "confidenceScore": 1.0,
+    "evidence": {
+     "source": "Recorded in DrugBank",
+     "curatedRule": false,
+     "drugbankRecorded": true,
+     "drugbankDescription": "Aspirin may decrease the antihypertensive activities of Lisinopril.",
+     "mlInteractionProbability": 1.0,
+     "mlPredictedType": 25,
+     "mlTypeDescription": "The risk or severity of adverse effects can be increased when Lisinopril is combined with Aspirin.",
+     "mlTypeConfidence": 1.0
+    }
+   },
+   {
+    "med1": "Aspirin",
+    "med2": "Metformin",
+    "severity": "Low",
+    "description": "Aspirin may increase the hypoglycemic activities of Metformin.",
+    "mechanism": "Interaction type: Aspirin may increase the hypoglycemic activities of Metformin.",
+    "biochemicalPathway": "Pharmacodynamic interaction (changes drug effects)",
+    "whyReactionHappens": "The structure-based model and the DrugBank record indicate that aspirin may increase the hypoglycemic activities of Metformin.",
+    "symptomsToWatch": [
+     "Increased side effects of either medicine",
+     "Reduced effect of either medicine"
+    ],
+    "clinicalRecommendation": "Usually minor - no change needed in most patients; monitor for reduced effect or extra side effects.",
+    "saferAlternative": "Discuss dose spacing or a therapeutic alternative with the prescriber.",
+    "confidenceScore": 0.9991,
+    "evidence": {
+     "source": "Recorded in DrugBank",
+     "curatedRule": false,
+     "drugbankRecorded": true,
+     "drugbankDescription": "Aspirin may increase the hypoglycemic activities of Metformin.",
+     "mlInteractionProbability": 0.9991,
+     "mlPredictedType": 63,
+     "mlTypeDescription": "Aspirin may increase the hypoglycemic activities of Metformin.",
+     "mlTypeConfidence": 1.0
+    }
+   },
+   {
+    "med1": "Lisinopril",
+    "med2": "Metformin",
+    "severity": "Low",
+    "description": "Metformin may increase the hypotensive activities of Lisinopril.",
+    "mechanism": "Interaction type: Metformin may increase the hypotensive activities of Lisinopril.",
+    "biochemicalPathway": "Pharmacodynamic interaction (changes drug effects)",
+    "whyReactionHappens": "The structure-based model predicts that metformin may increase the hypotensive activities of Lisinopril.",
+    "symptomsToWatch": [
+     "Increased side effects of either medicine",
+     "Reduced effect of either medicine"
+    ],
+    "clinicalRecommendation": "Usually minor - no change needed in most patients; monitor for reduced effect or extra side effects.",
+    "saferAlternative": "Discuss dose spacing or a therapeutic alternative with the prescriber.",
+    "confidenceScore": 0.9354,
+    "evidence": {
+     "source": "ML prediction (unconfirmed)",
+     "curatedRule": false,
+     "drugbankRecorded": false,
+     "drugbankDescription": null,
+     "mlInteractionProbability": 0.9354,
+     "mlPredictedType": 66,
+     "mlTypeDescription": "Metformin may increase the hypotensive activities of Lisinopril.",
+     "mlTypeConfidence": 0.9994
+    }
+   }
+  ],
+  "sideEffects": [
+   {
+    "medName": "Lisinopril",
+    "effect": "Dizziness",
+    "frequencyPercent": 11.8,
+    "severity": "Mild",
+    "category": "Neurological (SIDER label frequency)"
+   },
+   {
+    "medName": "Lisinopril",
+    "effect": "Blood creatinine increased",
+    "frequencyPercent": 8.5,
+    "severity": "Mild",
+    "category": "General (SIDER label frequency)"
+   },
+   {
+    "medName": "Lisinopril",
+    "effect": "Blood urea increased",
+    "frequencyPercent": 7.8,
+    "severity": "Mild",
+    "category": "General (SIDER label frequency)"
+   },
+   {
+    "medName": "Metformin",
+    "effect": "Gastrointestinal disorder",
+    "frequencyPercent": 42.0,
+    "severity": "Mild",
+    "category": "Gastrointestinal (SIDER label frequency)"
+   },
+   {
+    "medName": "Metformin",
+    "effect": "Diarrhoea",
+    "frequencyPercent": 16.7,
+    "severity": "Mild",
+    "category": "Gastrointestinal (SIDER label frequency)"
+   },
+   {
+    "medName": "Metformin",
+    "effect": "Flatulence",
+    "frequencyPercent": 10.0,
+    "severity": "Mild",
+    "category": "Gastrointestinal (SIDER label frequency)"
+   }
+  ],
+  "clinicalRecommendations": [
+   "Critical - Warfarin + Aspirin: Re-evaluate whether both are required. If combined therapy is essential, monitor INR/bleeding closely and add gastric protection (e.g. pantoprazole).",
+   "Warfarin: keep vitamin K intake (green leafy vegetables) consistent and check INR regularly.",
+   "Aspirin: take with food; report black stools or unusual bruising.",
+   "Lisinopril: monitor blood pressure, serum potassium and kidney function.",
+   "Metformin: take with meals; check kidney function and vitamin B12 periodically.",
+   "Older patient (72 yrs) on 4 medicines: review the regimen regularly (Beers criteria) and monitor for falls, dizziness and kidney function."
+  ],
+  "shapFeatures": [
+   {
+    "featureName": "Anticoagulant Class (1 drug)",
+    "impactValue": 1.034,
+    "category": "Drug Class",
+    "direction": "increases_risk",
+    "explanation": "TreeSHAP contribution (log-odds) to the predicted bleeding risk."
+   },
+   {
+    "featureName": "Warfarin in Regimen",
+    "impactValue": 0.295,
+    "category": "Medicine",
+    "direction": "increases_risk",
+    "explanation": "TreeSHAP contribution (log-odds) to the predicted bleeding risk."
+   },
+   {
+    "featureName": "Drugs with Known Liver Toxicity Side Effect (SIDER: 4)",
+    "impactValue": -0.132,
+    "category": "Prior Knowledge (SIDER)",
+    "direction": "decreases_risk",
+    "explanation": "TreeSHAP contribution (log-odds) to the predicted bleeding risk."
+   },
+   {
+    "featureName": "Antiplatelet Class (1 drug)",
+    "impactValue": 0.098,
+    "category": "Drug Class",
+    "direction": "increases_risk",
+    "explanation": "TreeSHAP contribution (log-odds) to the predicted bleeding risk."
+   },
+   {
+    "featureName": "Aspirin in Regimen",
+    "impactValue": 0.09,
+    "category": "Medicine",
+    "direction": "increases_risk",
+    "explanation": "TreeSHAP contribution (log-odds) to the predicted bleeding risk."
+   },
+   {
+    "featureName": "Patient Age (72 yrs)",
+    "impactValue": -0.083,
+    "category": "Patient Demographics",
+    "direction": "decreases_risk",
+    "explanation": "TreeSHAP contribution (log-odds) to the predicted bleeding risk."
+   }
+  ],
+  "adrPredictions": {
+   "adr_kidney": {
+    "label": "Kidney Injury",
+    "probability": 0.0607,
+    "threshold": 0.117,
+    "flagged": false,
+    "relative_risk": 1.48,
+    "baseline_rate": 0.0409
+   },
+   "adr_bleeding": {
+    "label": "Bleeding",
+    "probability": 0.0933,
+    "threshold": 0.1094,
+    "flagged": false,
+    "relative_risk": 2.61,
+    "baseline_rate": 0.0358
+   },
+   "adr_hepatotoxicity": {
+    "label": "Liver Toxicity",
+    "probability": 0.0163,
+    "threshold": 0.0917,
+    "flagged": false,
+    "relative_risk": 0.35,
+    "baseline_rate": 0.0465
+   },
+   "adr_arrhythmia": {
+    "label": "Heart Rhythm Disturbance",
+    "probability": 0.0216,
+    "threshold": 0.0839,
+    "flagged": false,
+    "relative_risk": 0.9,
+    "baseline_rate": 0.024
+   },
+   "adr_hyperkalemia": {
+    "label": "High Potassium (Hyperkalemia)",
+    "probability": 0.0043,
+    "threshold": 0.0121,
+    "flagged": false,
+    "relative_risk": 1.12,
+    "baseline_rate": 0.0038
+   },
+   "adr_hypotension": {
+    "label": "Low Blood Pressure",
+    "probability": 0.0207,
+    "threshold": 0.056,
+    "flagged": false,
+    "relative_risk": 1.13,
+    "baseline_rate": 0.0183
+   },
+   "adr_gastrointestinal": {
+    "label": "Gastrointestinal Upset",
+    "probability": 0.0998,
+    "threshold": 0.1327,
+    "flagged": false,
+    "relative_risk": 0.77,
+    "baseline_rate": 0.1296
+   },
+   "adr_neurological": {
+    "label": "Neurological Effects",
+    "probability": 0.1057,
+    "threshold": 0.1062,
+    "flagged": false,
+    "relative_risk": 1.06,
+    "baseline_rate": 0.0999
+   }
+  },
+  "shapSummary": {
+   "outcome": "Bleeding",
+   "baseProbability": 0.0348,
+   "finalProbability": 0.0933
+  },
+  "modelInfo": {
+   "engine": "PharmAI hybrid ML pipeline (Python)",
+   "pairsEvaluated": 6,
+   "shapExplainedOutcome": "Bleeding",
+   "latencyMs": 0
+  },
+  "timestamp": "Sample (generated by the ML pipeline)",
+  "patientId": "PAT-DEMO",
+  "patientName": "Demo Patient (Polypharmacy)",
+  "patientAge": 72,
+  "patientGender": "Female",
+  "status": "Completed"
+ }
+}

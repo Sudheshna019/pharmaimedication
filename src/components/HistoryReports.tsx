@@ -132,7 +132,7 @@ export const HistoryReports: React.FC<HistoryReportsProps> = ({
 
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 font-poppins">
-                      {item.patientName} <span className="text-slate-500 font-normal text-xs">({item.patientAge} Yrs, {item.patientGender})</span>
+                      {item.patientName} <span className="text-slate-500 font-normal text-xs">({item.patientAge ? `${item.patientAge} Yrs` : 'Age not given'}, {item.patientGender})</span>
                     </h3>
                     <p className="text-xs text-slate-600 mt-0.5">
                       Prescribed Meds: <strong className="text-slate-800">{item.detectedMedicines.map((m) => m.name).join(', ')}</strong>
