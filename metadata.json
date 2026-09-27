@@ -1,6 +1,0 @@
-{
-  "name": "PharmAI - AI Medication Side Effects & Drug Interactions",
-  "description": "AI-powered clinical decision support system for predicting drug interactions, medication side effects, prescription OCR analysis, SHAP explainability, real-time patient vitals, and EHR integration.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

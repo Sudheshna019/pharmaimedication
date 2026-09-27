@@ -100,8 +100,10 @@ python -m ml.train_adr               # ~3 min
 
 ## Deploy (free tier)
 
-`render.yaml` defines two free Render web services: `pharmai-ml` (Python) and `pharmai-web` (Node).
-On Render: **New + → Blueprint →** select the GitHub repo. Set `ML_API_URL` of `pharmai-web` to the URL of `pharmai-ml`.
+Two free Render web services are connected to this GitHub repository and redeploy automatically on every push:
+* **Website + OCR (Node):** https://pharmaimedication.onrender.com – build `npm install && npm run build`, start `npm start`
+* **ML service (Python):** https://pharmai-ml.onrender.com – build `pip install -r backend/requirements.txt`, start `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+
 Free services sleep after 15 minutes of inactivity; the first request afterwards can take ~1 minute.
 
 ## Limitations

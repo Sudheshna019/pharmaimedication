@@ -32,3 +32,12 @@ firebase-credentials.json
 ml/cache/
 ml/logs/
 backend/firebase-credentials.json
+
+# Personal notes / leftovers kept only on the local machine (not part of the app)
+DEPLOYMENT_INSTRUCTIONS.txt
+render.yaml
+docs/
+project_tree.txt
+metadata.json
+assets/.aistudio/
+bun.lock
