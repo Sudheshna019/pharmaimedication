@@ -9,8 +9,10 @@ dotenv.config();
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
-// Python FastAPI service that runs the ML models (see backend/)
-const ML_API_URL = (process.env.ML_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+// Python FastAPI service that runs the ML models (see backend/).
+// On Render (which sets RENDER=true) the deployed pharmai-ml service is used; locally, port 8000.
+const DEPLOYED_ML_URL = "https://pharmai-ml.onrender.com";
+const ML_API_URL = (process.env.ML_API_URL || (process.env.RENDER ? DEPLOYED_ML_URL : "http://127.0.0.1:8000")).replace(/\/$/, "");
 const ROOT = process.cwd();
 
 app.use(express.json({ limit: "25mb" }));
