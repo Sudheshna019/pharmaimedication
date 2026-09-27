@@ -52,7 +52,7 @@ class ADRInferenceEngine:
     def predict(self, age, sex: str, generics: list[str]) -> dict:
         x = featurize(age, sex.lower(), generics, self.spec, self.norm.drug_class)
         dm = xgb.DMatrix(x.reshape(1, -1))
-        risks, contribs = {}, {}
+        risks = {}
         for t in TARGETS:
             prob = float(self.boosters[t].predict(dm)[0])
             risks[t] = {
@@ -63,11 +63,12 @@ class ADRInferenceEngine:
                 "relative_risk": round(prob / max(self.base_rates[t], 1e-6), 2),
                 "baseline_rate": round(self.base_rates[t], 4),
             }
-            contribs[t] = self.boosters[t].predict(dm, pred_contribs=True)[0]
 
         # SHAP explanation for the category with the highest risk relative to baseline
         top = max(TARGETS, key=lambda t: risks[t]["relative_risk"])
-        phi = contribs[top][:-1]
+        # TreeSHAP only for the explained category (it is the slowest step on small servers)
+        contrib = self.boosters[top].predict(dm, pred_contribs=True)[0]
+        phi = contrib[:-1]
         cols = self.spec["columns"]
         order = np.argsort(-np.abs(phi))
         shap = []
@@ -80,7 +81,7 @@ class ADRInferenceEngine:
                          "impactValue": round(float(phi[i]), 3)})
             if len(shap) == 6:
                 break
-        base = float(contribs[top][-1])
+        base = float(contrib[-1])
         summary = {"outcome": TARGET_LABELS[top],
                    "baseProbability": round(1 / (1 + np.exp(-base)), 4),        # model output with no patient info
                    "finalProbability": risks[top]["probability"]}                # = sigmoid(base + sum of all SHAP values)
